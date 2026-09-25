@@ -1,0 +1,67 @@
+[
+  {
+    "name": "pi-mcp-adapter",
+    "source": "npm:pi-mcp-adapter",
+    "what": "MCP-адаптер: подключает MCP-серверы к pi"
+  },
+  {
+    "name": "pi-web-access",
+    "source": "npm:pi-web-access",
+    "what": "веб: поиск, выкачка URL, клонирование репозиториев, PDF, YouTube и локальное видео"
+  },
+  {
+    "name": "pi-subagents",
+    "source": "npm:pi-subagents",
+    "what": "делегирование одному субагенту и сценарные многоагентные прогоны"
+  },
+  {
+    "name": "@juicesharp/rpiv-ask-user-question",
+    "source": "npm:@juicesharp/rpiv-ask-user-question",
+    "what": "вопросник модели к человеку: типизированные варианты вместо свободного ответа"
+  },
+  {
+    "name": "pi-background-tasks",
+    "source": "npm:pi-background-tasks",
+    "what": "фоновые shell-задачи, делегированные агенты только на чтение, Fusion-воркфлоу через дочерние pi"
+  },
+  {
+    "name": "@juicesharp/rpiv-todo",
+    "source": "npm:@juicesharp/rpiv-todo",
+    "what": "список задач модели поверх интерфейса; переживает /reload и сжатие истории"
+  },
+  {
+    "name": "context-mode",
+    "source": "npm:context-mode",
+    "what": "MCP-плагин: песочница для кода, база FTS5, поиск по намерению — экономит окно контекста"
+  },
+  {
+    "name": "pi-lens",
+    "source": "npm:pi-lens",
+    "what": "обратная связь по коду в реальном времени: LSP, линтеры, форматтеры, типы, структурный анализ"
+  },
+  {
+    "name": "@narumitw/pi-goal",
+    "source": "npm:@narumitw/pi-goal",
+    "what": "автономное доведение одной цели /goal до конца"
+  },
+  {
+    "name": "@dietrichgebert/ponytail",
+    "source": "npm:@dietrichgebert/ponytail",
+    "what": "режим ленивого сеньора: лучший код — тот, который не написан"
+  },
+  {
+    "name": "@tintinweb/pi-subagents",
+    "source": "npm:@tintinweb/pi-subagents",
+    "what": "субагенты в духе Claude Code: параллельный запуск, живой виджет, свои типы агентов, руление на ходу"
+  },
+  {
+    "name": "pi-simplify",
+    "source": "npm:pi-simplify",
+    "what": "разбор свежих правок на ясность, согласованность и сопровождаемость"
+  },
+  {
+    "name": "@llblab/pi-telegram",
+    "source": "npm:@llblab/pi-telegram",
+    "what": "адаптер рантайма Telegram для pi"
+  }
+]

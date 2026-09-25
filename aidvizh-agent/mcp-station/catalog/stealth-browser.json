@@ -1,0 +1,21 @@
+{
+  "name": "stealth-browser",
+  "kind": "stdio",
+  "tier": "core",
+  "browser": true,
+  "description": "браузер против антибот-систем: stealth-browser-mcp на nodriver (наследник undetected-chromedriver) — челленджи Cloudflare, хуки сети, клонирование элементов",
+  "argv": [
+    "bash",
+    "-lc",
+    "test -x \"$HOME/.agents/mcp/stealth-browser-mcp/venv/bin/python\" || { printf 'stealth-browser не собран: запусти mcp-station/bin/stealth-setup.sh\\n' >&2; exit 1; }; exec \"$HOME/.agents/mcp/stealth-browser-mcp/venv/bin/python\" \"$HOME/.agents/mcp/stealth-browser-mcp/src/server.py\""
+  ],
+  "clients": [
+    "omp",
+    "opencode",
+    "pi"
+  ],
+  "argvWindows": [
+    "$HOME/.agents/mcp/stealth-browser-mcp/venv/Scripts/python.exe",
+    "$HOME/.agents/mcp/stealth-browser-mcp/src/server.py"
+  ]
+}

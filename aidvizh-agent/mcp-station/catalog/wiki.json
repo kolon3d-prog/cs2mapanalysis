@@ -1,0 +1,20 @@
+{
+  "name": "wiki",
+  "kind": "stdio",
+  "tier": "core",
+  "description": "вики-библиотека (wiki-station/wiki: Wiki VibeCoding и другие): обзор, поиск, чтение, журнал, линт, добавление постов",
+  "argv": [
+    "bash",
+    "-lc",
+    "test -f \"$HOME/.agents/wiki-station/mcp/server.mjs\" || { printf 'wiki-station не установлена: запусти wiki-station/bin/wiki-station.sh install\\n' >&2; exit 1; }; exec node \"$HOME/.agents/wiki-station/mcp/server.mjs\""
+  ],
+  "clients": [
+    "omp",
+    "opencode",
+    "pi"
+  ],
+  "argvWindows": [
+    "node",
+    "$HOME/.agents/wiki-station/mcp/server.mjs"
+  ]
+}

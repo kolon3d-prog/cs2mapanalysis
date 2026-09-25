@@ -1,0 +1,10 @@
+[Unit]
+Description=command-center: сторож набора каждые 15 минут
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+Unit=center-sentinel.service
+
+[Install]
+WantedBy=timers.target

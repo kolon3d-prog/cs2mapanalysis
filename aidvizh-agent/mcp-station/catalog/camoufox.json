@@ -1,0 +1,11 @@
+{
+  "name": "camoufox",
+  "kind": "stdio",
+  "tier": "core",
+  "browser": true,
+  "description": "браузерный ресёрч на анти-детект Firefox (Camoufox): поиск, корпусы источников, кампании, живая сессия, цитаты",
+  "argv": ["bash", "-lc", "test -x \"$HOME/.venvs/camoufox-research/bin/camoufox-research\" || { printf 'camoufox не установлен: нет окружения в рантайме ($HOME/.venvs/camoufox-research)\\nпоставь его установщиком из клона проекта: bash scripts/install.sh (или --uninstall, чтобы снять)\\n' >&2; exit 1; }; export CAMOUFOX_CAPS=\"${CAMOUFOX_CAPS:-research,browser,session,vision}\"; exec \"$HOME/.venvs/camoufox-research/bin/camoufox-research\""],
+  "argvWindows": ["$HOME/.venvs/camoufox-research/Scripts/camoufox-research.exe"],
+  "envWindows": { "CAMOUFOX_CAPS": "research,browser,session,vision" },
+  "clients": ["omp", "opencode", "pi"]
+}

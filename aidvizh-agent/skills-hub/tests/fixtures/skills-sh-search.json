@@ -1,0 +1,8 @@
+{
+  "query": "pdf",
+  "skills": [
+    { "source": "acme/tools", "name": "shared", "id": "acme/tools/shared", "installs": 10 },
+    { "source": "acme/tools", "name": "popular", "id": "acme/tools/popular", "installs": 900 },
+    { "source": "vercel-labs/json-render", "name": "react-pdf", "id": "vercel-labs/json-render/react-pdf", "installs": 100 }
+  ]
+}

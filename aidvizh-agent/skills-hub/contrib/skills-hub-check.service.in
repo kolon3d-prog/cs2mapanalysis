@@ -1,0 +1,8 @@
+[Unit]
+Description=Проверка skills-hub: doctor и оффлайн-тесты
+# диск отключён — юнит просто пропускается, без ошибок в журнале
+ConditionPathExists=@HUB@/contrib/skills-hub-check.sh
+
+[Service]
+Type=oneshot
+ExecStart=@HUB@/contrib/skills-hub-check.sh

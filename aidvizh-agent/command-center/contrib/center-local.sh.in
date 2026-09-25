@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# Локальная обёртка центра: живёт в $HOME (ставится КОПИЕЙ, не ссылкой на диск), поэтому
+# переживает пропажу диска. Её дело — довести до юнита понятную строку, если диска нет:
+# сторож с диска в этом случае не запустится, а молчаливого «всё хорошо» от мёртвых ссылок быть
+# не должно, поэтому обёртка печатает причину и выходит с 1 — юнит падает видимо.
+#
+# Ставит её contrib/install-units.sh, подставляя путь центра вместо @CENTER@.
+#
+# Использование: center-local.sh [sentinel|backup]
+#   sentinel — сторож набора: диск DATA и ссылки в $HOME (режим таймера: --quiet)
+#   backup   — ночной бэкап: цели берутся из $HOME/.config/center/backup.target (по строке на цель,
+#              второй столбец — свой --keep); сначала локальная копия, потом оффлайн-носитель
+set -uo pipefail
+
+CENTER="@CENTER@"
+MODE="${1:-sentinel}"
+DISK="$(dirname "$CENTER")"
+
+# Устройство пути: GNU stat, иначе BSD (macOS). Пусто — спросить не вышло.
+dev_of() {
+  stat -c %d "$1" 2>/dev/null || stat -f %d "$1" 2>/dev/null
+}
+
+# Жив ли диск. Признак: файлы на месте И набор лежит на своём устройстве, а не на корневой ФС
+# (после отвала диска каталог достаётся корневой ФС — тогда ссылки в $HOME мертвы).
+mounted=0
+if [[ -e "$DISK/VERSION" ]]; then
+  disk_dev="$(dev_of "$DISK")"
+  root_dev="$(dev_of /)"
+  if [[ -z "$disk_dev" || -z "$root_dev" ]]; then
+    mounted=1 # устройство спросить нечем — не выдумываем приговор, пусть скажет сторож
+  elif [[ "$disk_dev" != "$root_dev" ]]; then
+    mounted=1
+  fi
+fi
+
+if (( mounted == 0 )); then
+  # shellcheck disable=SC2016
+  printf 'диск DATA не примонтирован, ссылки в $HOME мертвы (%s)\n' "$DISK" >&2
+  exit 1
+fi
+
+case "$MODE" in
+  sentinel)
+    if [[ ! -x "$CENTER/bin/sentinel.sh" ]]; then
+      printf 'сторожа нет: %s/bin/sentinel.sh не найден (диск примонтирован, а набора на нём нет)\n' "$CENTER" >&2
+      exit 1
+    fi
+    exec "$CENTER/bin/sentinel.sh" --quiet
+    ;;
+  backup)
+    target_file="${XDG_CONFIG_HOME:-$HOME/.config}/center/backup.target"
+    if [[ ! -f "$target_file" ]]; then
+      printf 'нет файла цели бэкапа %s — положи в него путь (по строке на цель)\n' "$target_file" >&2
+      exit 1
+    fi
+    # Целей может быть несколько — локальная копия и оффлайн-носитель: по строке на цель, у каждой
+    # можно дописать свой --keep. Идём по порядку и не отменяем остальные из-за одной неудачи:
+    # отключённая флешка не должна лишать набора локальной копии. Но и молчать о неудаче нельзя —
+    # строка в stderr и код 1 в конце, чтобы юнит упал видимо.
+    status=0
+    targets=0
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      line="${line#"${line%%[![:space:]]*}"}"
+      line="${line%"${line##*[![:space:]]}"}"
+      if [[ -z "$line" || "$line" == \#* ]]; then
+        continue
+      fi
+      if [[ "$line" == *"|"* ]]; then
+        target="${line%%|*}"
+        rest="${line#*|}"
+        keep="${rest%%|*}"
+        extra=""
+        [[ "$rest" == *"|"* ]] && extra="${rest#*|}"
+      else
+        read -r target keep extra <<<"$line"
+      fi
+      if [[ -z "$target" || "$target" == \#* ]]; then
+        continue
+      fi
+      if [[ -n "${extra:-}" ]]; then
+        printf 'в строке цели %s лишние слова (%s) — читаю только путь и --keep\n' "$target" "$extra" >&2
+      fi
+      targets=$((targets + 1))
+      args=(--to "$target")
+      if [[ -n "${keep:-}" ]]; then
+        args+=(--keep "$keep")
+      fi
+      if ! "$CENTER/bin/center.sh" backup "${args[@]}"; then
+        printf 'цель %s не забэкапилась — причина строкой выше, следующая цель всё равно будет взята\n' "$target" >&2
+        status=1
+      fi
+    done <"$target_file"
+    if (( targets == 0 )); then
+      printf 'в файле цели бэкапа %s нет ни одного пути — нужен путь (по строке на цель)\n' "$target_file" >&2
+      exit 1
+    fi
+    exit "$status"
+    ;;
+  *)
+    printf 'обёртка знает sentinel и backup, а не %s\n' "$MODE" >&2
+    exit 2
+    ;;
+esac

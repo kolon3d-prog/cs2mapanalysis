@@ -1,0 +1,18 @@
+[
+  {
+    "repo": "acme/tools",
+    "skillName": "shared",
+    "namespace": "",
+    "path": "skills/shared",
+    "stars": 7,
+    "description": "тот же скилл, что отдал skills-sh"
+  },
+  {
+    "repo": "other/tools",
+    "skillName": "beta",
+    "namespace": "",
+    "path": "skills/beta",
+    "stars": 3,
+    "description": "уникальный для github"
+  }
+]

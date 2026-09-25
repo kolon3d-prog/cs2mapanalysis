@@ -1,0 +1,10 @@
+{
+  "name": "playwright",
+  "kind": "stdio",
+  "tier": "core",
+  "browser": true,
+  "description": "браузер через Playwright (официальный MCP Microsoft): автоматизация, формы, скриншоты, движок Chrome",
+  "argv": ["npx", "-y", "@playwright/mcp@0.0.82", "--browser", "chrome"],
+  "argvWindows": ["cmd.exe", "/c", "npx", "-y", "@playwright/mcp@0.0.82", "--browser", "chrome"],
+  "clients": ["omp", "opencode", "pi"]
+}

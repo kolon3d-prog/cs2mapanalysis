@@ -1,0 +1,20 @@
+{
+  "name": "basic-memory",
+  "kind": "stdio",
+  "tier": "core",
+  "description": "память агента: markdown-заметки на диске + SQLite-индекс, поиск и граф связей. без ключей и без облака",
+  "argv": [
+    "bash",
+    "-lc",
+    "command -v basic-memory >/dev/null 2>&1 || { printf 'basic-memory не установлен: запусти memory-station/bin/memory-station.sh install\\n' >&2; exit 1; }; exec basic-memory mcp"
+  ],
+  "clients": [
+    "omp",
+    "opencode",
+    "pi"
+  ],
+  "argvWindows": [
+    "basic-memory",
+    "mcp"
+  ]
+}

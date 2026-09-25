@@ -1,0 +1,10 @@
+{
+  "name": "jev",
+  "kind": "stdio",
+  "tier": "keyed",
+  "description": "TypeSafe Jev: классификация, сравнение, верификация суждений моделью",
+  "argv": ["bash", "-lc", "set -a; . \"$MCP_SECRETS\"; set +a; exec npx -y @jkudish/jev-mcp@0.6.0"],
+  "argvWindows": ["node", "$STATION/bin/entryenv.mjs", "--", "npx", "-y", "@jkudish/jev-mcp@0.6.0"],
+  "requiresEnv": ["OPENROUTER_API_KEY"],
+  "clients": ["omp", "opencode", "pi"]
+}

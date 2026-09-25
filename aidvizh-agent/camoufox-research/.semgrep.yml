@@ -1,0 +1,260 @@
+# Гейт против возврата классов дыр, закрытых 21.09 (ветка local-fixes):
+#   (а) fetch мимо стража URL (check_url) — анти-SSRF/LFI: file:// отдавал
+#       локальные файлы, 127.0.0.1 ходил внутрь сети;
+#   (б) запись файла по произвольному пути мимо safe_export_path — анти-RCE:
+#       config.env подключается через `.` в cron, тем же путём ~/.bashrc.
+#
+# Запуск (шаг «Semgrep guard rules» в .github/workflows/ci.yml):
+#   semgrep --config .semgrep.yml camoufox_research/ scripts/ --metrics=off
+#
+# Семантика стража (проверена приманками в /tmp, 21.09):
+#   * semgrep OSS видит вызов check_url/safe_export_path в ТОЙ ЖЕ функции
+#     (вложенность учитывается), но не в вызывающей — межфайловый анализ это Pro;
+#   * порядок «страж выше запроса» отдельным правилом ниже: для плоских блоков
+#     ловится, для вложенных — нет;
+#   * запрос виден, когда URL пришёл ПАРАМЕТРОМ функции. Локальная переменная
+#     (например `h = check_url(h)` в цикле по ссылкам) не отслеживается —
+#     при правке такого кода смотри на страж глазами.
+# Если URL/путь собран из КОНСТАНТЫ модуля (внутренний API) — добавь
+# pattern-not-inside с обоснованием, а не убирай правило.
+rules:
+  # --- (а) fetch: URL-параметр обязан пройти check_url в той же функции -----
+  - id: fetch-url-without-check-url
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Fetch по URL, пришедшему ПАРАМЕТРОМ, без вызова check_url в этой же
+      функции. Именно так уходили page.goto / urllib.request.urlopen /
+      ctx.request.get мимо проверки схемы и адреса (file:// = чтение локальных
+      файлов, 127.0.0.1 = SSRF-плумбинг внутрь сети). Почини: `url =
+      check_url(url)` в начале функции, до запроса.
+    metadata:
+      category: security
+      confidence: HIGH
+      impact: HIGH
+      cwe: "CWE-918: Server-Side Request Forgery (SSRF)"
+      owasp: "A10:2021 - Server-Side Request Forgery (SSRF)"
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: $PAGE.goto($URL, ...)
+              - pattern-inside: |
+                  def $FUNC(..., $URL, ...):
+                      ...
+          - patterns:
+              - pattern: $CTX.request.get($URL, ...)
+              - pattern-inside: |
+                  def $FUNC(..., $URL, ...):
+                      ...
+          - patterns:
+              - pattern: urllib.request.urlopen($URL, ...)
+              - pattern-inside: |
+                  def $FUNC(..., $URL, ...):
+                      ...
+          # urlopen(Request(url)) — тот же дырявый путь через обёртку Request
+          - patterns:
+              - pattern: urllib.request.urlopen($REQ, ...)
+              - pattern-inside: |
+                  def $FUNC(..., $URL, ...):
+                      ...
+                      $REQ = urllib.request.Request($URL, ...)
+                      ...
+      - pattern-not-inside: |
+          def $F(...):
+              ...
+              check_url(...)
+              ...
+      # Исключения (URL сюда не приходит из аргумента тула):
+      #   extract_retry — повторный заход ТЕМ ЖЕ адресом, который уже прошёл
+      #     check_url в _goto (все вызовы — сразу после _goto, один модуль);
+      #   _http_get — url всегда собран из _ARXIV_URL/_S2_URL этого же модуля;
+      #   _url_alive — url приходит из БД кампании (сначала был скачан стражем).
+      - pattern-not-inside: |
+          def extract_retry(...):
+              ...
+      - pattern-not-inside: |
+          def _http_get(...):
+              ...
+      - pattern-not-inside: |
+          def _url_alive(...):
+              ...
+
+  # --- (а+) страж ПОСЛЕ запроса: защита, которая уже не работает -----------
+  - id: fetch-url-checked-after-fetch
+    languages: [python]
+    severity: ERROR
+    message: >-
+      check_url вызван ПОСЛЕ fetch — это уже не защита: запрос ушёл по сырому
+      URL, а код выглядит закрытым стражем. Переставь вызов ДО запроса.
+    metadata:
+      category: security
+      confidence: HIGH
+      impact: HIGH
+      cwe: "CWE-918: Server-Side Request Forgery (SSRF)"
+      owasp: "A10:2021 - Server-Side Request Forgery (SSRF)"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $PAGE.goto($URL, ...)
+              ...
+              check_url(...)
+          - pattern: |
+              $CTX.request.get($URL, ...)
+              ...
+              check_url(...)
+          - pattern: |
+              urllib.request.urlopen($URL, ...)
+              ...
+              check_url(...)
+      - pattern-inside: |
+          def $FUNC(..., $URL, ...):
+              ...
+
+  # --- (б) запись файла: путь-параметр обязан пройти safe_export_path -------
+  - id: write-file-without-safe-export-path
+    languages: [python]
+    severity: ERROR
+    # Правило про пакет: скрипты владельца пишут в свои каталоги (CACHE/, логи).
+    paths:
+      include:
+        - "**/camoufox_research/*.py"
+    message: >-
+      Запись файла по пути, пришедшему ПАРАМЕТРОМ ПУБЛИЧНОЙ функции, без
+      safe_export_path. Класс дыры 21.09: export(data, path=...) писал ЛЮБОЙ
+      файл управляемым содержимым (текст со страницы → config.env → исполнение
+      от владельца). Почини: `path = safe_export_path(path)` до записи.
+    metadata:
+      category: security
+      confidence: HIGH
+      impact: HIGH
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory"
+      owasp: "A01:2021 - Broken Access Control"
+    patterns:
+      - pattern-either:
+          - pattern: open($PATH, "w", ...)
+          - pattern: open($PATH, "wb", ...)
+          - pattern: open($PATH, "wt", ...)
+          - pattern: open($PATH, "a", ...)
+          - pattern: open($PATH, "ab", ...)
+          - pattern: open($PATH, "at", ...)
+          - pattern: open($PATH, "x", ...)
+          - pattern: open($PATH, "xb", ...)
+          - pattern: open($PATH, "xt", ...)
+          # тот же обходной путь через pathlib: путь — получатель вызова
+          - pattern: $PATH.write_text(...)
+          - pattern: $PATH.write_bytes(...)
+      - pattern-inside: |
+          def $FUNC(..., $PATH, ...):
+              ...
+      # Публичная функция = граница тула (страж стоит там). Приватные хелперы
+      # (_write_csv/_write_md) получают путь УЖЕ проверенным от неё — иначе
+      # правило требовало бы стража внутри каждого писателя.
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^[^_]
+      - pattern-not-inside: |
+          def $F(...):
+              ...
+              safe_export_path(...)
+              ...
+
+  # --- (в) shell-инъекция через shell=True --------------------------------
+  - id: subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: >-
+      subprocess с shell=True: строка команды уходит в /bin/sh, и любой
+      управляемый фрагмент (имя файла, URL, аргумент тула) становится
+      исполнением команд. Передавай список argv без shell=True.
+    metadata:
+      category: security
+      confidence: HIGH
+      impact: HIGH
+      cwe: "CWE-78: Improper Neutralization of Special Elements used in an OS Command"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.run(..., shell=True, ...)
+          - pattern: subprocess.Popen(..., shell=True, ...)
+          - pattern: subprocess.call(..., shell=True, ...)
+          - pattern: subprocess.check_call(..., shell=True, ...)
+          - pattern: subprocess.check_output(..., shell=True, ...)
+
+  # --- (г) проглоченная ошибка вокруг стража/fetch/записи ------------------
+  # Буквальный запрет ЛЮБОГО `except Exception: pass` дал бы 46 находок в 21
+  # модуле — это осознанная идиома репо для фоновых операций (в ci.yml bandit
+  # идёт с `-lll`, то есть B110 «try-except-pass» допускается). Поэтому правило
+  # бьёт по опасной форме: там проглоченная ошибка = молча выключенная защита
+  # или молча потерянный файл, а не пропущенная телеметрия.
+  - id: swallow-hides-guard-fetch-or-write
+    languages: [python]
+    severity: ERROR
+    paths:
+      include:
+        - "**/camoufox_research/*.py"
+      exclude:
+        # Фоновая уборка кэша: её сбой виден в health-pulse, а падение лога/
+        # удаления не должно ронять шаг уборки (осознанное исключение модуля).
+        - "**/camoufox_research/camoufox_housekeep.py"
+    message: >-
+      Ошибка проглочена (`except ...: pass` или contextlib.suppress) вокруг
+      вызова стража, сетевого запроса или записи файла. Страж = молча выключенная
+      защита (URL/путь уходит без проверки), запрос/запись = молча потерянный
+      результат. Почини: вернуть ошибку наверх или залогировать её.
+    metadata:
+      category: security
+      confidence: MEDIUM
+      impact: HIGH
+      cwe: "CWE-390: Detection of Error Condition Without Action"
+    patterns:
+      # pattern-inside ловит вызов на ЛЮБОЙ глубине проглоченного блока
+      # (в try запись обычно вложена в with open(...) или в цикл)
+      - pattern-either:
+          - pattern-inside: |
+              try:
+                ...
+              except ...:
+                pass
+          - pattern-inside: |
+              with contextlib.suppress(Exception):
+                ...
+          - pattern-inside: |
+              with suppress(Exception):
+                ...
+      - pattern-either:
+          - pattern: check_url(...)
+          - pattern: safe_export_path(...)
+          - pattern: $PAGE.goto(...)
+          - pattern: urllib.request.urlopen(...)
+          - pattern: $CTX.request.get(...)
+          - pattern: open($P, "w", ...)
+          - pattern: open($P, "wb", ...)
+          - pattern: open($P, "a", ...)
+          - pattern: open($P, "ab", ...)
+          - pattern: open($P, "x", ...)
+          - pattern: open($P, "xb", ...)
+          - pattern: $P.write_text(...)
+          - pattern: $P.write_bytes(...)
+          - pattern: os.replace(...)
+      # Исключения (проглатывание осознанное и локальное, 21.09):
+      #   extract_retry — перезаход тем же (уже проверенным) адресом: потерять
+      #     добытый текст хуже, чем проглотить ошибку повторного захода;
+      #   profile_load — профиль восстанавливается по каждому origin отдельно:
+      #     отказ одного origin не должен ронять остальные;
+      #   _log/_critic_save/_usage_save — лог, кэш критика и метрика тулов:
+      #     «бонус, не роняем вызов» (в самих функциях это написано).
+      - pattern-not-inside: |
+          def extract_retry(...):
+              ...
+      - pattern-not-inside: |
+          def profile_load(...):
+              ...
+      - pattern-not-inside: |
+          def _log(log_path, msg):
+              ...
+      - pattern-not-inside: |
+          def _critic_save(...):
+              ...
+      - pattern-not-inside: |
+          def _usage_save(...):
+              ...

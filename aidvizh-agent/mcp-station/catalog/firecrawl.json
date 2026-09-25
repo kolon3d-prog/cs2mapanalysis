@@ -1,0 +1,10 @@
+{
+  "name": "firecrawl",
+  "kind": "stdio",
+  "tier": "keyed",
+  "description": "веб-скрейп, поиск и извлечение через Firecrawl",
+  "argv": ["bash", "-lc", "set -a; . \"$MCP_SECRETS\"; set +a; exec npx -y firecrawl-mcp@3.25.4"],
+  "argvWindows": ["node", "$STATION/bin/entryenv.mjs", "--", "npx", "-y", "firecrawl-mcp@3.25.4"],
+  "requiresEnv": ["FIRECRAWL_API_KEY"],
+  "clients": ["omp", "opencode", "pi"]
+}

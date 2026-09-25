@@ -1,0 +1,10 @@
+{
+  "name": "inspo",
+  "kind": "stdio",
+  "tier": "core",
+  "verifyTimeout": 60,
+  "description": "архив реальных сайтов: референсы для UI",
+  "argv": ["npx", "-y", "inspo-mcp@0.1.16"],
+  "argvWindows": ["cmd.exe", "/c", "npx", "-y", "inspo-mcp@0.1.16"],
+  "clients": ["omp", "opencode", "pi"]
+}

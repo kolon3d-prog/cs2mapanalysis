@@ -1,0 +1,9 @@
+{
+  "name": "gdb",
+  "kind": "stdio",
+  "tier": "core",
+  "description": "отладка нативной программы через gdb (MCP mcp-gdb от signal-slot): 17 тулов — сессии, attach, точки останова, шаг, стек, регистры, core-дампы",
+  "argv": ["bash", "-lc", "command -v gdb >/dev/null 2>&1 || { printf 'нет gdb: sudo dnf install gdb\\n' >&2; exit 1; }; command -v npx >/dev/null 2>&1 || { printf 'нет npx (нужен node): см. cli-station\\n' >&2; exit 1; }; exec npx -y mcp-gdb@0.1.3"],
+  "argvWindows": ["cmd.exe", "/c", "npx", "-y", "mcp-gdb@0.1.3"],
+  "clients": ["omp", "opencode", "pi"]
+}

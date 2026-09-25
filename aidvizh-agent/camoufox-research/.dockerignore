@@ -1,0 +1,64 @@
+# Контекст сборки образа (Dockerfile). Задача — чтобы в контекст шло ровно то,
+# что нужно `pip install .`, и ничего лишнего. Три причины, все практические:
+#   1) скорость: .venv (413 МБ) и .git в контекст не идут — сборка не тратит
+#      время на их отправку в демон;
+#   2) секреты: .env/.key/.pem и приватная добыча (research/*.md) НЕ должны
+#      попасть в слой образа — слой читается командой `docker save` у любого,
+#      у кого есть образ (те же файлы стережёт guard-all, но слой — вне git);
+#   3) честность образа: тесты/docs/CI-конфиги в рантайме не нужны — образ
+#      должен содержать только то, что исполняется.
+#
+# ВНИМАНИЕ: README.md исключать НЕЛЬЗЯ — pyproject ссылается на него
+# (readme = "README.md"), без файла сборка падает. Отсюда `!README.md` в конце.
+# Скрытые файлы (.envrc, .pre-commit-config.yaml, .github/) не перечисляем
+# поимённо: их отсекает общее правило ниже.
+
+# --- управление версиями и локальное окружение ---
+.git
+.gitignore
+.gitmodules
+.venv
+venv
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# --- кэши инструментов (пересобираются, в образ не нужны) ---
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# --- приватное и локальное: НЕ В ОБРАЗ ---
+research/
+configs/
+metrics/
+images/
+_mcp_probe*
+.envrc
+.env
+.env.*
+*.key
+*.pem
+*.sqlite
+*.sqlite3
+*.db
+cookies.json
+storage_state*.json
+*.log
+
+# --- не нужно рантайму ---
+.github/
+.pre-commit-config.yaml
+.semgrep.yml
+tests/
+docs/
+mcp/
+*.md
+!README.md
+
+# --- сам контекст сборки ---
+Dockerfile
+.dockerignore

@@ -1,0 +1,9 @@
+{
+  "name": "lazyweb",
+  "kind": "http",
+  "tier": "keyed",
+  "description": "скриншоты продуктов и growth-ресёрч (хостовый MCP)",
+  "url": "https://www.lazyweb.com/mcp",
+  "headers": { "Authorization": { "env": "LAZYWEB_TOKEN", "format": "Bearer %s" } },
+  "clients": ["omp", "opencode", "pi"]
+}

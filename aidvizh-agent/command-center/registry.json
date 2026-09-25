@@ -1,0 +1,518 @@
+{
+  "projects": [
+    {
+      "name": "cli-station",
+      "kind": "станция",
+      "what": "установка самих CLI: omp, pi, opencode (opencode2) на linux/macOS/Windows",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/cli-station.sh",
+      "runWindows": "bin/cli-station.ps1",
+      "tests": "tests/station.bats",
+      "activate": [
+        "status"
+      ],
+      "harnessStatus": "status --json",
+      "update": "bin/cli-station.sh install",
+      "updateWindows": "bin/cli-station.ps1 install"
+    },
+    {
+      "name": "skills-hub",
+      "kind": "хаб",
+      "what": "поиск и установка скиллов из четырёх маркетов + MCP-сервер",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "skills-manager.sh",
+      "runWindows": "skills-manager.ps1",
+      "tests": "tests/hub.bats",
+      "expectLinks": [
+        {
+          "link": "$HOME/.local/bin/skills-manager",
+          "into": "skills-hub",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.agents/skills/skills-ops",
+          "into": "skills-hub",
+          "allowCopy": true
+        }
+      ],
+      "activateFile": "contrib/install-links.sh",
+      "activateFileWindows": "contrib/install-links.ps1",
+      "activate": [],
+      "dryRunFlag": "--dry-run",
+      "note": "активация = симлинки команды и скилла",
+      "updateNote": "массовой команды обновления нет: скиллы ставятся поштучно (`skills-manager install <пакет>`), свои симлинки обновляет contrib/install-links.sh"
+    },
+    {
+      "name": "skills-station",
+      "kind": "станция",
+      "what": "коллекция сторонних скиллов и раскладка по слоям (global/project/свой путь)",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/skills-station.sh",
+      "runWindows": "bin/skills-station.ps1",
+      "tests": "tests/station.bats",
+      "activate": [
+        "install",
+        "all"
+      ],
+      "update": "bin/skills-station.sh install all",
+      "updateWindows": "bin/skills-station.ps1 install all"
+    },
+    {
+      "name": "spec-station",
+      "kind": "станция",
+      "what": "спек-режим (Kiro spec mode + spec-kit): скилл spec-mode и слэш-команды /spec* в клиентов",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/spec-station.sh",
+      "runWindows": "bin/spec-station.ps1",
+      "tests": "tests/station.bats",
+      "expectLinks": [
+        {
+          "link": "$HOME/.agents/skills/spec-mode",
+          "into": [
+            "spec-station",
+            "skills-station"
+          ],
+          "allowCopy": true
+        }
+      ],
+      "activate": [
+        "install"
+      ],
+      "update": "bin/spec-station.sh install",
+      "updateWindows": "bin/spec-station.ps1 install"
+    },
+    {
+      "name": "pi-plugins-station",
+      "kind": "станция",
+      "what": "сторонние плагины pi: каталог npm-пакетов, установка и обновление через сам pi",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/pi-plugins-station.sh",
+      "runWindows": "bin/pi-plugins-station.ps1",
+      "tests": "tests/station.bats",
+      "activate": [
+        "install",
+        "all"
+      ],
+      "outdated": "bin/pi-plugins-station.sh outdated --json",
+      "outdatedUnit": "плагин",
+      "update": "bin/pi-plugins-station.sh update all",
+      "updateWindows": "bin/pi-plugins-station.ps1 update all"
+    },
+    {
+      "name": "modes-station",
+      "kind": "станция",
+      "what": "автономные режимы /goal и /loop для opencode2: плагин ведёт сессию к цели или повторяет задачу",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/modes-station.sh",
+      "runWindows": "bin/modes-station.ps1",
+      "tests": "tests/station.bats",
+      "expectLinks": [
+        {
+          "link": "$HOME/.config/opencode/plugins/modes-station.ts",
+          "into": "modes-station",
+          "allowCopy": true
+        }
+      ],
+      "activate": [
+        "install"
+      ],
+      "dryRunFlag": "none",
+      "update": "bin/modes-station.sh install",
+      "updateWindows": "bin/modes-station.ps1 install"
+    },
+    {
+      "name": "vibe-station",
+      "kind": "станция",
+      "what": "режим директора /vibe для opencode2: ведёшь воркер-сессии (fast/good), сам только читаешь и проверяешь",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/vibe-station.sh",
+      "runWindows": "bin/vibe-station.ps1",
+      "tests": "tests/station.bats",
+      "expectLinks": [
+        {
+          "link": "$HOME/.config/opencode/plugins/vibe-station.ts",
+          "into": "vibe-station",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.config/opencode/agent/vibe-director.md",
+          "into": "vibe-station",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.config/opencode/agent/vibe-fast.md",
+          "into": "vibe-station",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.config/opencode/agent/vibe-good.md",
+          "into": "vibe-station",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.agents/skills/vibe-mode",
+          "into": "vibe-station",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.config/opencode/skills/vibe-mode",
+          "into": "vibe-station",
+          "allowCopy": true
+        }
+      ],
+      "activate": [
+        "install"
+      ],
+      "dryRunFlag": "none",
+      "update": "bin/vibe-station.sh install",
+      "updateWindows": "bin/vibe-station.ps1 install"
+    },
+    {
+      "name": "mcp-station",
+      "kind": "станция",
+      "what": "каталог MCP-серверов и одна команда, ставящая их в omp/pi/opencode",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/mcp-station.sh",
+      "runWindows": "bin/mcp-station.ps1",
+      "tests": "tests/station.bats",
+      "activate": [
+        "install"
+      ],
+      "mcpVerify": "verify --json",
+      "update": "bin/mcp-station.sh update",
+      "updateWindows": "bin/mcp-station.ps1 update",
+      "outdated": "bin/mcp-station.sh outdated --json",
+      "outdatedUnit": "сервер"
+    },
+    {
+      "name": "memory-station",
+      "kind": "станция",
+      "what": "память агента: markdown-заметки + SQLite-индекс, общая для omp/pi/opencode, без ключей",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/memory-station.sh",
+      "runWindows": "bin/memory-station.ps1",
+      "tests": "tests/station.bats",
+      "activate": [
+        "install"
+      ],
+      "update": "bin/memory-station.sh install",
+      "updateWindows": "bin/memory-station.ps1 install"
+    },
+    {
+      "name": "wiki-station",
+      "kind": "станция",
+      "what": "центр вики: библиотека (wiki/Wiki VibeCoding), каталог, журнал, поиск FTS5, MCP-сервер",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/wiki-station.sh",
+      "runWindows": "bin/wiki-station.ps1",
+      "tests": "tests/station.bats",
+      "activate": [
+        "install"
+      ],
+      "update": "bin/wiki-station.sh install",
+      "updateWindows": "bin/wiki-station.ps1 install"
+    },
+    {
+      "name": "test-center",
+      "kind": "станция",
+      "what": "сквозная проверка системы на любой ОС: наборы проверок + багрепорт.md с командой и хвостом вывода",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/test-center.sh",
+      "runWindows": "bin/test-center.ps1",
+      "tests": "tests/station.bats",
+      "updateNote": "проверяющая станция: своего состояния не держит — гоняет чужие наборы, обновлять нечего"
+    },
+    {
+      "name": "prompt-station",
+      "kind": "станция",
+      "what": "прошивка системного промта (персоны) + смена персоны на ходу",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/prompt-station.sh",
+      "runWindows": "bin/prompt-station.ps1",
+      "tests": "tests/station.bats",
+      "activate": [
+        "install-ext"
+      ],
+      "expectLinks": [
+        {
+          "link": "$HOME/.omp/agent/extensions/persona.ts",
+          "into": "prompt-station",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.pi/agent/extensions/persona.ts",
+          "into": "prompt-station",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.config/opencode/plugins/persona.ts",
+          "into": "prompt-station",
+          "allowCopy": true
+        }
+      ],
+      "updateNote": "единой команды нет: прошивка ставится по имени (`prompt-station flash <персона>`), расширения — `install-ext`"
+    },
+    {
+      "name": "personas",
+      "kind": "данные",
+      "what": "тексты персон, из которых прошивается системный промт (arch-re, duck, feynman, gemini, translator, tutor, zan-duck, zan-persona)",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "note": "использует prompt-station",
+      "updateNote": "данные для prompt-station: живут файлами на диске, своей команды нет"
+    },
+    {
+      "name": "sysprompt",
+      "kind": "проект",
+      "what": "команда /prompt — вброс текста в системную роль (opencode-плагин, расширения omp и pi)",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "install.sh",
+      "runWindows": "install.ps1",
+      "tests": "tests/install.bats",
+      "activate": [
+        "all"
+      ],
+      "expectLinks": [
+        {
+          "link": "$HOME/.omp/agent/extensions/sysprompt.ts",
+          "into": "sysprompt",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.pi/agent/extensions/sysprompt.ts",
+          "into": "sysprompt",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.config/opencode/plugins/sysprompt.ts",
+          "into": "sysprompt",
+          "allowCopy": true
+        }
+      ],
+      "dryRunFlag": "none",
+      "update": "install.sh all",
+      "updateWindows": "install.ps1 -Target all"
+    },
+    {
+      "name": "omp-zen-free",
+      "kind": "проект",
+      "what": "расширения omp/pi: снимает 403 бесплатного тарифа OpenCode Go/Zen вне клиента OpenCode + /keys (мультиключи omp)",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "install.sh",
+      "runWindows": "install.ps1",
+      "tests": "tests/install.bats",
+      "expectLinks": [
+        {
+          "link": "$HOME/.omp/agent/extensions/zen-free-tier-headers.ts",
+          "into": "omp-zen-free",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.pi/agent/extensions/zen-free-tier-headers.ts",
+          "into": "omp-zen-free",
+          "allowCopy": true
+        },
+        {
+          "link": "$HOME/.omp/agent/extensions/keys.ts",
+          "into": "omp-zen-free",
+          "allowCopy": true
+        }
+      ],
+      "activateFile": "install.sh",
+      "activate": [],
+      "dryRunFlag": "--dry-run",
+      "update": "install.sh",
+      "updateWindows": "install.ps1 -Target all"
+    },
+    {
+      "name": "camoufox-research",
+      "kind": "проект",
+      "what": "MCP-сервер и инструментарий веб-ресёрча: браузер Camoufox, поиск, корпусы источников, кампании, цитаты",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "scripts/install.sh",
+      "runWindows": "scripts/install.ps1",
+      "tests": "scripts/gates.sh",
+      "expectLinks": [
+        {
+          "link": "$HOME/.agents/skills/camoufox-research-rails",
+          "into": [
+            "skills-station",
+            "camoufox-research"
+          ],
+          "allowCopy": true,
+          "separate": "ставится отдельным установщиком (center run camoufox-research), шагом fresh — нет"
+        },
+        {
+          "link": "$HOME/.agents/skills/camoufox-research-deep-research",
+          "into": [
+            "skills-station",
+            "camoufox-research"
+          ],
+          "allowCopy": true,
+          "separate": "ставится отдельным установщиком (center run camoufox-research), шагом fresh — нет"
+        },
+        {
+          "link": "$HOME/.agents/skills/camoufox-research-automation",
+          "into": [
+            "skills-station",
+            "camoufox-research"
+          ],
+          "allowCopy": true,
+          "separate": "ставится отдельным установщиком (center run camoufox-research), шагом fresh — нет"
+        },
+        {
+          "link": "$HOME/.agents/skills/camoufox-research-ops",
+          "into": [
+            "skills-station",
+            "camoufox-research"
+          ],
+          "allowCopy": true,
+          "separate": "ставится отдельным установщиком (center run camoufox-research), шагом fresh — нет"
+        }
+      ],
+      "expectMcp": [
+        "camoufox"
+      ],
+      "activateFile": "scripts/install.sh",
+      "activate": [],
+      "dryRunFlag": "--dry-run",
+      "note": "активация = установщик проекта из клона (клон есть — не клонирует): venv в $HOME/.venvs/camoufox-research, браузер в $HOME/.cache/camoufox; четыре скилла лежат ссылками в ~/.agents/skills (источник — camoufox-research/research/public/skills/*.md, зеркало в skills-station/collection). Допустимы оба места (исходник и коллекция), поэтому into — список; если установщик положил копию файлами, allowCopy не делает это ошибкой.",
+      "update": "scripts/install.sh",
+      "updateWindows": "scripts/install.ps1"
+    },
+    {
+      "name": "agent-bundle",
+      "kind": "доки",
+      "what": "как развернуть агента на новой машине: секции search, Design, harness",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "note": "инструмент этому центру включает план bootstrap",
+      "updateNote": "доки и план установки: обновляются вместе с диском, своей команды нет"
+    },
+    {
+      "name": "fedora-windows-look",
+      "kind": "скилл",
+      "what": "переезд на новый ПК + Fedora/GNOME под Windows-лук и скорость (bash, Linux-only)",
+      "platforms": [
+        "linux"
+      ],
+      "tests": "tests/scripts.bats",
+      "expectLinks": [
+        {
+          "link": "$HOME/.agents/skills/fedora-windows-look",
+          "into": "fedora-windows-look"
+        }
+      ],
+      "activateFile": "install.sh",
+      "activate": [],
+      "dryRunFlag": "--dry-run",
+      "update": "install.sh",
+      "updateNote": "скилл под Linux (bash): команды обновления для Windows нет"
+    },
+    {
+      "name": "totp",
+      "kind": "проект",
+      "what": "шестизначные коды TOTP из одного секрета (sh/py/ps1)",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "totp.sh",
+      "runWindows": "totp.ps1",
+      "updateNote": "утилита без установки (sh/py/ps1 рядом): обновляется вместе с диском"
+    },
+    {
+      "name": "dump (в рантайме)",
+      "what": "склад временных файлов и отчётов ПЕРЕЕХАЛ в рантайм-каталог: $XDG_STATE_HOME/command-center/dump (~/.local/state/command-center/dump). На диске данных его быть не должно (правило 21.09: прод-диск — не свалка).",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "optional": true,
+      "path": "~/.local/state/command-center/dump",
+      "updateNote": "рантайм-каталог, а не проект: обновлять нечего"
+    },
+    {
+      "name": "cleanup-station",
+      "kind": "станция",
+      "what": "снос агентов, скиллов, прошивок, расширений и MCP — подготовка к чистой установке",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "run": "bin/cleanup.sh",
+      "runWindows": "bin/cleanup.ps1",
+      "tests": "tests/station.bats",
+      "updateNote": "умеет сносить, а не ставить: обновление — это `center fresh` (снос и установка заново)"
+    }
+  ]
+}

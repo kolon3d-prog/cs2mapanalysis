@@ -1,0 +1,23 @@
+{
+  "name": "skills-hub",
+  "kind": "stdio",
+  "tier": "core",
+  "description": "хаб маркетов скиллов (поиск/инспект/установка) + MCP-сервер",
+  "approval": [
+    "skills_install"
+  ],
+  "argv": [
+    "bash",
+    "-lc",
+    "exec node \"$HOME/.agents/skills/skills-ops/mcp/server.mjs\""
+  ],
+  "clients": [
+    "omp",
+    "opencode",
+    "pi"
+  ],
+  "argvWindows": [
+    "node",
+    "$HOME/.agents/skills/skills-ops/mcp/server.mjs"
+  ]
+}

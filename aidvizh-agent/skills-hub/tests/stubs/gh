@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Заглушка gh: search отдаёт фикстуру, install раскладывает SKILL.md в --dir.
+set -euo pipefail
+
+printf 'gh %s\n' "$*" >>"${STUB_LOG:?STUB_LOG не задан}"
+[[ -n "${STUB_SLEEP:-}" ]] && sleep "$STUB_SLEEP"
+
+case "${1:-} ${2:-}" in
+  "skill search")
+    cat "${FIXTURES:?FIXTURES не задан}/github-search.json"
+    ;;
+  "skill list")
+    printf 'fixture-skill\tuser\t-\n'
+    ;;
+  "skill install")
+    shift 2
+    repo="${1:-}"
+    skill="${2:-}"
+    shift 2 || true
+    dir=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --dir)
+          dir="${2:-}"
+          shift 2
+          ;;
+        *) shift ;;
+      esac
+    done
+    [[ -n "$dir" && -n "$repo" && -n "$skill" ]] || {
+      echo "gh-заглушка: нужны repo, skill и --dir" >&2
+      exit 1
+    }
+    mkdir -p "$dir/$skill"
+    cp "${FIXTURES}/skill-plain.md" "$dir/$skill/SKILL.md"
+    printf 'installed %s/%s\n' "$repo" "$skill"
+    ;;
+  *)
+    exit 0
+    ;;
+esac

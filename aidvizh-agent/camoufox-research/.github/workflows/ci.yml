@@ -1,0 +1,154 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lock-check:
+    name: uv.lock check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Validate uv.lock
+        run: |
+          pip install "uv==0.12.3"
+          uv lock --check
+
+  test:
+    name: Python ${{ matrix.python-version }}
+    needs: lock-check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Full-reinstall smoke from frozen lock
+        env:
+          CAMOUFOX_CAPS: all
+        run: |
+          python -m pip install --upgrade pip
+          pip install "uv==0.12.3"
+          uv sync --frozen --no-dev
+          .venv/bin/python -c "import camoufox_research.camoufox_research as s; n=len(s.mcp._tool_manager._tools); print('smoke tools:', n); assert n >= 50"
+          rm -rf .venv
+
+      - name: Imports compile
+        run: |
+          python -m py_compile camoufox_research/*.py mcp/server.py
+          python -c "import camoufox_research.camoufox_research as s; print('import OK, tools registered:', len(s.mcp._tool_manager._tools))"
+
+      - name: Lint (ruff + mypy — BLOCKING, bandit — medium+)
+        run: |
+          pip install "ruff==0.16.5" "mypy==2.3.1" "bandit==1.9.4" 2>&1 | tail -n 5
+          echo "--- ruff (гейт: 0 ошибок) ---"
+          ruff check camoufox_research/ --line-length 100
+          echo "--- mypy (гейт: 0 ошибок) ---"
+          mypy --config-file mypy.ini camoufox_research/
+          echo "--- bandit (гейт: 0 high/medium; низкие = осознанные try-except-pass) ---"
+          bandit -r camoufox_research/ -x tests -q -lll
+
+      - name: Semgrep guard rules (URL/путь/страж — BLOCKING)
+        # 21.09: закрыли два класса дыр — fetch мимо check_url (SSRF/LFI) и
+        # запись мимо safe_export_path (RCE через config.env). Здесь гейт,
+        # чтобы не вернулись: свои правила в .semgrep.yml, реестр (p/…) не
+        # тянем — он меняется под нами и требует сети. Версия пинится, как
+        # ruff/mypy выше: сменилась версия анализатора — меняется и вердикт
+        # (--error = находки роняют шаг, --metrics=off = ничего не уходит
+        # наружу). Исключения (внутренние API, фоновые логи) перечислены в
+        # .semgrep.yml с обоснованием — правь их там, а не глуши шаг.
+        run: |
+          pip install "semgrep==1.172.0" 2>&1 | tail -n 2
+          echo "--- semgrep: .semgrep.yml (гейт: 0 находок) ---"
+          semgrep --config .semgrep.yml camoufox_research/ scripts/ \
+            --metrics=off --disable-version-check --error
+
+      - name: Bats — стражи репозитория (pre-push, gitleaks, cron, уведомления)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq bats
+          bats tests/bats/
+
+      - name: Unit tests (housekeep cleanup TTL)
+        run: python -m unittest discover -s tests -v
+
+      - name: MCP stdio smoke (initialize + tools/list + ping)
+        # Полный реестр — ЯВНО: smoke ищет session_start (opt-in группа), а он
+        # с 21.09 в дефолт не входит (дефолт = research,browser, 34 тула)
+        # — без CAMOUFOX_CAPS=all дым падал бы на здоровой сборке.
+        env:
+          CAMOUFOX_CAPS: all
+        run: python .github/scripts/smoke_mcp.py
+
+      - name: MCP probe (диагноз + гейт «сервер отдаёт тулы»)
+        # 28.08: probe = живое рукопожатие из CLI (scripts/mcp_probe.py).
+        # Гейт: tools_count >= 50 — «Unknown tool» не вернётся, если сервер
+        # реально поднимается и регистрирует полный реестр.
+        # 21.09: профиль задан ЯВНО (all) — гейт про ПОЛНЫЙ реестр, а не про
+        # дефолт агента (34 тула); дефолт проверяют tests/test_caps_default.py.
+        env:
+          CAMOUFOX_CAPS: all
+        run: |
+          python scripts/mcp_probe.py --json > probe.json
+          python - <<'PY'
+          import json
+          d = json.load(open("probe.json"))
+          h = d["handshake"]
+          print(f"protocol={h.get('protocol')} tools={h.get('tools_count')} caps={d.get('caps')}")
+          assert h.get("ok"), f"рукопожатие не удалось: {h.get('error')}"
+          assert h.get("tools_count", 0) >= 50, f"тулов мало: {h.get('tools_count')}"
+          PY
+
+      - name: Guard-all (приватная добыча, 3-й слой после локального хука)
+        # 28.08: локальный guard-all (pre-commit) может быть обойдён —
+        # CI-версия догонит: research/*.md (приват) = стоп, секреты = стоп.
+        run: |
+          PRIV=$(git ls-files --cached | grep -E '^research/[0-9]{4}-.*\.md$|^research/cit/' || true)
+          if [ -n "$PRIV" ]; then
+            echo "⛔ приватная добыча в коммите:"; echo "$PRIV"; exit 1
+          fi
+          echo "guard-all: приватных файлов нет"
+
+      - name: Tool count audit
+        # 28.08: аудит числа тулов (context-pressure, arXiv 2602.18914 /
+        # 2605.05247: >40 = деградация). Число видно в логе; если
+        # CAMOUFOX_TOOL_HIDE задан — скрытые не считаются.
+        # 21.09: считаем ПОЛНЫЙ реестр (CAMOUFOX_CAPS=all): аудит про
+        # контекст-давление всего набора, а незаданный профиль теперь = дефолт
+        # агента (34) и порог >60 не срабатывал бы никогда.
+        env:
+          CAMOUFOX_CAPS: all
+        run: |
+          COUNT=$(python -c "import sys; sys.path.insert(0,'.'); from camoufox_research.camoufox_research import mcp; print(len(mcp._tool_manager._tools))" 2>/dev/null || echo '?')
+          echo "tool-count: $COUNT"
+          if [ "$COUNT" != "?" ] && [ "$COUNT" -gt 60 ]; then
+            echo "⚠️  tool-count $COUNT > 60 — подумай о скрытии (usage-cut.py)"
+          fi

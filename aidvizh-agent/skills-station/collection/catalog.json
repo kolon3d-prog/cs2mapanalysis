@@ -1,0 +1,370 @@
+[
+  {
+    "name": "bats-testing-patterns",
+    "source": "sickn33/agentic-awesome-skills"
+  },
+  {
+    "name": "brainstorming",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "bun-package-manager",
+    "source": "secondsky/claude-skills"
+  },
+  {
+    "name": "camoufox-research-automation",
+    "source": "своё: camoufox-research/research/public/skills"
+  },
+  {
+    "name": "camoufox-research-deep-research",
+    "source": "своё: camoufox-research/research/public/skills"
+  },
+  {
+    "name": "camoufox-research-ops",
+    "source": "своё: camoufox-research/research/public/skills"
+  },
+  {
+    "name": "camoufox-research-rails",
+    "source": "своё: camoufox-research/research/public/skills"
+  },
+  {
+    "name": "chrome-devtools",
+    "source": "chromedevtools/chrome-devtools-mcp"
+  },
+  {
+    "name": "code-hardcode-audit",
+    "source": "terrylica/cc-skills"
+  },
+  {
+    "name": "code-review-and-quality",
+    "source": "addyosmani/agent-skills"
+  },
+  {
+    "name": "context-engineering",
+    "source": "addyosmani/agent-skills"
+  },
+  {
+    "name": "debugging-and-error-recovery",
+    "source": "addyosmani/agent-skills"
+  },
+  {
+    "name": "design-taste-frontend",
+    "source": "leonxlnx/taste-skill"
+  },
+  {
+    "name": "diagnosing-superpowers",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "differential-review",
+    "source": "trailofbits/skills"
+  },
+  {
+    "name": "dispatching-parallel-agents",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "doc-coauthoring",
+    "source": "anthropics/skills"
+  },
+  {
+    "name": "executing-plans",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "finishing-a-development-branch",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "firecrawl",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-agent",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-company-directories",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-competitive-intel",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-crawl",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-dashboard-reporting",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-deep-research",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-demo-walkthrough",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-developer-index",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-download",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-interact",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-knowledge-base",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-knowledge-ingest",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-lead-gen",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-lead-research",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-map",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-market-research",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-monitor",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-parse",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-qa",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-research-index",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-research-papers",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-scrape",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-search",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-seo-audit",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-shop",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-website-design-clone",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "firecrawl-workflows",
+    "source": "firecrawl/skills"
+  },
+  {
+    "name": "frontend-design",
+    "source": "anthropics/skills"
+  },
+  {
+    "name": "frontend-testing-best-practices",
+    "source": "sergiodxa/agent-skills"
+  },
+  {
+    "name": "install-script-generator",
+    "source": "luongnv89/skills"
+  },
+  {
+    "name": "jev-ops",
+    "source": "своё: mcp-station/skill"
+  },
+  {
+    "name": "karpathy-llm-wiki",
+    "source": "astro-han/karpathy-llm-wiki"
+  },
+  {
+    "name": "llm-wiki",
+    "source": "ar9av/obsidian-wiki"
+  },
+  {
+    "name": "mcp-builder",
+    "source": "anthropics/skills"
+  },
+  {
+    "name": "mcp-security-audit",
+    "source": "github/awesome-copilot"
+  },
+  {
+    "name": "playwright-best-practices",
+    "source": "currents-dev/playwright-best-practices-skill"
+  },
+  {
+    "name": "playwright-cli",
+    "source": "microsoft/playwright-cli"
+  },
+  {
+    "name": "playwright-explore-website",
+    "source": "github/awesome-copilot"
+  },
+  {
+    "name": "powershell-master",
+    "source": "josiahsiegel/claude-plugin-marketplace"
+  },
+  {
+    "name": "powershell-windows",
+    "source": "vudovn/ag-kit"
+  },
+  {
+    "name": "protocol-reverse-engineering",
+    "source": "wshobson/agents"
+  },
+  {
+    "name": "receiving-code-review",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "requesting-code-review",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "reverse-engineering",
+    "source": "zhaoxuya520/reverse-skill"
+  },
+  {
+    "name": "semgrep",
+    "source": "trailofbits/skills"
+  },
+  {
+    "name": "shell-portability",
+    "source": "thebushidocollective/han"
+  },
+  {
+    "name": "shellcheck-configuration",
+    "source": "wshobson/agents"
+  },
+  {
+    "name": "skill-creator",
+    "source": "anthropics/skills"
+  },
+  {
+    "name": "spec-mode",
+    "source": "своё: spec-station/skill"
+  },
+  {
+    "name": "stealth-browser-mcp",
+    "source": "vibheksoni/stealth-browser-mcp"
+  },
+  {
+    "name": "subagent-driven-development",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "systematic-debugging",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "tavily-best-practices",
+    "source": "tavily-ai/skills"
+  },
+  {
+    "name": "tavily-cli",
+    "source": "tavily-ai/skills"
+  },
+  {
+    "name": "tavily-crawl",
+    "source": "tavily-ai/skills"
+  },
+  {
+    "name": "tavily-dynamic-search",
+    "source": "tavily-ai/skills"
+  },
+  {
+    "name": "tavily-extract",
+    "source": "tavily-ai/skills"
+  },
+  {
+    "name": "tavily-map",
+    "source": "tavily-ai/skills"
+  },
+  {
+    "name": "tavily-research",
+    "source": "tavily-ai/skills"
+  },
+  {
+    "name": "tavily-search",
+    "source": "tavily-ai/skills"
+  },
+  {
+    "name": "test-driven-development",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "typesafe-ai",
+    "source": "typesafe-ai/skills"
+  },
+  {
+    "name": "using-git-worktrees",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "using-superpowers",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "vercel-react-best-practices",
+    "source": "vercel-labs/agent-skills"
+  },
+  {
+    "name": "verification-before-completion",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "web-scraping",
+    "source": "jamditis/claude-skills-journalism"
+  },
+  {
+    "name": "webapp-testing",
+    "source": "anthropics/skills"
+  },
+  {
+    "name": "winapp-setup",
+    "source": "microsoft/winappcli"
+  },
+  {
+    "name": "windows-builder",
+    "source": "hashicorp/agent-skills"
+  },
+  {
+    "name": "writing-plans",
+    "source": "obra/superpowers"
+  },
+  {
+    "name": "writing-skills",
+    "source": "obra/superpowers"
+  }
+]

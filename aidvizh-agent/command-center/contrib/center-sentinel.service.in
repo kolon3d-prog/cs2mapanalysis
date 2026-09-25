@@ -1,0 +1,10 @@
+[Unit]
+Description=command-center: сторож набора — диск DATA и ссылки в $HOME
+Documentation=file://@CENTER@/docs/07-verify.md
+After=local-fs.target
+
+[Service]
+Type=oneshot
+# Локальная обёртка, а не скрипт с диска: она лежит в $HOME и потому переживает пропажу диска —
+# иначе сторож пропадёт вместе с тем, что сторожит (см. contrib/center-local.sh.in).
+ExecStart=@LOCAL@/center-local.sh sentinel

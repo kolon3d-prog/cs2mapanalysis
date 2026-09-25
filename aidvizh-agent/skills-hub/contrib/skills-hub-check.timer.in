@@ -1,0 +1,11 @@
+[Unit]
+Description=Часовая проверка skills-hub
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5m
+Persistent=true
+Unit=skills-hub-check.service
+
+[Install]
+WantedBy=timers.target

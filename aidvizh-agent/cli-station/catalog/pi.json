@@ -1,0 +1,25 @@
+{
+  "name": "pi",
+  "description": "pi coding agent — минимальный терминальный харнесс (команда pi)",
+  "home": "https://pi.dev",
+  "verify": { "command": "pi", "args": ["--version"] },
+  "methods": {
+    "linux": [
+      { "id": "npm", "requires": ["npm"], "argv": ["npm", "install", "-g", "--ignore-scripts", "@earendil-works/pi-coding-agent@0.87.1"] },
+      { "id": "bun", "requires": ["bun"], "argv": ["bun", "install", "-g", "@earendil-works/pi-coding-agent@0.87.1"] }
+    ],
+    "darwin": [
+      { "id": "npm", "requires": ["npm"], "argv": ["npm", "install", "-g", "--ignore-scripts", "@earendil-works/pi-coding-agent@0.87.1"] },
+      { "id": "bun", "requires": ["bun"], "argv": ["bun", "install", "-g", "@earendil-works/pi-coding-agent@0.87.1"] }
+    ],
+    "win32": [
+      { "id": "npm", "requires": ["npm"], "argv": ["npm", "install", "-g", "--ignore-scripts", "@earendil-works/pi-coding-agent@0.87.1"] },
+      { "id": "bun", "requires": ["bun"], "argv": ["bun", "install", "-g", "@earendil-works/pi-coding-agent@0.87.1"] }
+    ]
+  },
+  "notes": [
+    "Версия npm-пакета зафиксирована в каталоге; обновление — отдельное изменение этого файла с review.",
+    "На Windows pi работает через Git Bash; путь к bash можно задать shellPath в ~/.pi/agent/settings.json.",
+    "У pi нет MCP — серверы даёт расширение pi-mcp-adapter (соседняя станция mcp-station)."
+  ]
+}

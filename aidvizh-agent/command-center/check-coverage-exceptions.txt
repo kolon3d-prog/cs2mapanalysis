@@ -1,0 +1,18 @@
+# Исключения покрытия прогона: наборы bats, которые лежат на диске, но НЕ зовутся сквозной
+# проверкой skills-hub/contrib/skills-hub-check.sh (её же зовёт `center check` и часовой таймер) —
+# только эти пути, и у каждого причина.
+#
+# Формат строки: путь-от-корня-набора|причина. Пусто и # — комментарий.
+# Гейт bin/docs-check.sh (движок bin/docs-check.mjs, на Windows обёртка bin/docs-check.ps1) проверяет
+# обе стороны: набор вне прогона и без строки тут — расхождение; строка, у которой файла нет или
+# набор уже зовётся прогоном — протухшая, и это тоже расхождение.
+#
+# Правило: часовой прогон проверяет СТАНЦИИ набора; наборы, которые принадлежат внутренностям
+# проекта (его стражи, хуки, расписания) и гоняются его собственным гейтом, в прогон станций не
+# входят — иначе часовая проверка превращается в прогон всех проектов диска.
+#
+# ── стражи проекта camoufox-research: их гоняет сам проект ───────────────────────────────────────
+camoufox-research/tests/bats/git_pre_push.bats|стражи проекта: набор про git-хук pre-push, его гоняет camoufox-research/scripts/gates.sh (шаг bats tests/bats/) и scripts/run_bats.sh — не прогон станций
+camoufox-research/tests/bats/gitleaks_precommit.bats|стражи проекта: набор про pre-commit-хук gitleaks, тот же прогон gates.sh/run_bats.sh
+camoufox-research/tests/bats/health_pulse_notify.bats|стражи проекта: набор про уведомления пульса (notify-send), тот же прогон gates.sh/run_bats.sh
+camoufox-research/tests/bats/install_cron.bats|стражи проекта: набор про установку cron-задач (Linux-only), тот же прогон gates.sh/run_bats.sh

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Заглушка npx для clawhub: search печатает фикстуру, install кладёт SKILL.md в --workdir.
+set -euo pipefail
+
+printf 'npx %s\n' "$*" >>"${STUB_LOG:?STUB_LOG не задан}"
+[[ -n "${STUB_SLEEP:-}" ]] && sleep "$STUB_SLEEP"
+
+command=""
+workdir=""
+slug=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    search | install | list | uninstall)
+      command="$1"
+      ;;
+    --workdir)
+      workdir="${2:-}"
+      shift
+      ;;
+  esac
+  if [[ "$command" == "install" && -z "$slug" && "$1" != "install" && "$1" != -* ]]; then
+    slug="$1"
+  fi
+  shift
+done
+
+case "$command" in
+  search)
+    cat "${FIXTURES:?FIXTURES не задан}/clawhub-search.txt"
+    ;;
+  install)
+    [[ -n "$slug" && -n "$workdir" ]] || {
+      echo "npx-заглушка: нужны слаг и --workdir" >&2
+      exit 1
+    }
+    mkdir -p "$workdir/.agents/skills/$slug"
+    cp "${FIXTURES}/skill-plain.md" "$workdir/.agents/skills/$slug/SKILL.md"
+    printf 'installed %s\n' "$slug"
+    ;;
+  list)
+    printf 'Manually installed (not tracked by clawhub):\n  fixture-skill\n'
+    ;;
+  *)
+    exit 0
+    ;;
+esac

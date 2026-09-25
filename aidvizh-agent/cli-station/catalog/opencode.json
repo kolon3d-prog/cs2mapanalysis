@@ -1,0 +1,30 @@
+{
+  "name": "opencode",
+  "description": "opencode CLI и сервис; в dev-канале ставит бинарь opencode2",
+  "home": "https://opencode.ai",
+  "verify": { "command": "opencode2", "args": ["--version"] },
+  "channels": {
+    "dev": { "tag": "0.0.0-dev-20122", "hint": "зафиксированная dev-сборка: она даёт opencode2 и plugin API v2" },
+    "latest": { "tag": "2.0.16", "hint": "зафиксированный стабильный релиз" }
+  },
+  "defaultChannel": "dev",
+  "methods": {
+    "linux": [
+      { "id": "npm-dev", "requires": ["npm"], "channel": "dev", "argv": ["npm", "install", "-g", "@opencode/cli@0.0.0-dev-20122"] },
+      { "id": "npm-latest", "requires": ["npm"], "channel": "latest", "argv": ["npm", "install", "-g", "@opencode/cli@2.0.16"] }
+    ],
+    "darwin": [
+      { "id": "npm-dev", "requires": ["npm"], "channel": "dev", "argv": ["npm", "install", "-g", "@opencode/cli@0.0.0-dev-20122"] },
+      { "id": "npm-latest", "requires": ["npm"], "channel": "latest", "argv": ["npm", "install", "-g", "@opencode/cli@2.0.16"] }
+    ],
+    "win32": [
+      { "id": "npm-dev", "requires": ["npm"], "channel": "dev", "argv": ["npm", "install", "-g", "@opencode/cli@0.0.0-dev-20122"] },
+      { "id": "npm-latest", "requires": ["npm"], "channel": "latest", "argv": ["npm", "install", "-g", "@opencode/cli@2.0.16"] }
+    ]
+  },
+  "notes": [
+    "Бинарь opencode2 и opencode — один и тот же файл; в пакете @opencode/cli объявлены оба имени (npm view @opencode/cli bin).",
+    "Версии каналов зафиксированы в этом каталоге; обновление выполняется отдельным изменением каталога и review.",
+    "После установки/обновления сервис перечитывает конфиг только с рестартом: opencode2 service restart."
+  ]
+}

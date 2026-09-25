@@ -1,0 +1,30 @@
+# pre-commit крючки — ловят стиль/типы до push (shift-left)
+# Установка: pip install pre-commit && pre-commit install
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.5
+    hooks:
+      - id: ruff
+        args: [--fix, --line-length, "100"]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.3.1
+    hooks:
+      - id: mypy
+        args: [--config-file, mypy.ini]
+        additional_dependencies: []
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.9.4
+    hooks:
+      - id: bandit
+        args: [-q, -r, -lll]
+  - repo: local
+    hooks:
+      - id: guard-all
+        name: "страж: приватная добыча + секреты + gitleaks (один проход)"
+        entry: bash scripts/guard-all.sh
+        language: system
+        always_run: true
+        verbose: true
+        pass_filenames: false
+        exclude: ^tests/

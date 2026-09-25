@@ -1,0 +1,10 @@
+[Unit]
+Description=command-center: ночной бэкап набора (центр backup)
+Documentation=file://@CENTER@/docs/07-verify.md
+After=local-fs.target
+
+[Service]
+Type=oneshot
+# Цели берутся из $HOME/.config/center/backup.target — обёртка читает их сама (по строке на цель)
+# и отказывается работать, если диск DATA не примонтирован. Один экземпляр: два бэкапа разом не нужны.
+ExecStart=@LOCAL@/center-local.sh backup

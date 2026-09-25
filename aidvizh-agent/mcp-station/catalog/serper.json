@@ -1,0 +1,10 @@
+{
+  "name": "serper",
+  "kind": "stdio",
+  "tier": "keyed",
+  "description": "Google SERP и скрейп через Serper",
+  "argv": ["bash", "-lc", "set -a; . \"$MCP_SECRETS\"; set +a; exec npx -y serper-search-scrape-mcp-server@0.1.2"],
+  "argvWindows": ["node", "$STATION/bin/entryenv.mjs", "--", "npx", "-y", "serper-search-scrape-mcp-server@0.1.2"],
+  "requiresEnv": ["SERPER_API_KEY"],
+  "clients": ["omp", "opencode", "pi"]
+}

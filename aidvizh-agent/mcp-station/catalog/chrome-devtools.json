@@ -1,0 +1,10 @@
+{
+  "name": "chrome-devtools",
+  "kind": "stdio",
+  "tier": "core",
+  "browser": true,
+  "description": "браузер через Chrome DevTools Protocol (официальный MCP команды Chrome): навигация, скриншоты, сеть, производительность на живом Chrome",
+  "argv": ["npx", "-y", "chrome-devtools-mcp@1.9.0", "--no-performance-crux"],
+  "argvWindows": ["cmd.exe", "/c", "npx", "-y", "chrome-devtools-mcp@1.9.0", "--no-performance-crux"],
+  "clients": ["omp", "opencode", "pi"]
+}

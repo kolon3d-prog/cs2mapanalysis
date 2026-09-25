@@ -1,0 +1,9 @@
+{
+  "name": "wireshark-mcp",
+  "kind": "stdio",
+  "tier": "core",
+  "description": "анализ пакетов через tshark: .pcap, статистика, HTTP/DNS, расшифровка TLS, YARA",
+  "argv": ["bash", "-lc", "test -x \"$HOME/.venvs/wireshark-mcp/bin/wireshark-mcp\" || { printf 'wireshark-mcp не собран: запусти mcp-station/bin/debug-setup.sh\\n' >&2; exit 1; }; command -v tshark >/dev/null 2>&1 || { printf 'нет tshark: sudo dnf install wireshark-cli\\n' >&2; exit 1; }; export WIRESHARK_MCP_ALLOWED_DIRS=\"${WIRESHARK_MCP_ALLOWED_DIRS:-$HOME}\"; exec \"$HOME/.venvs/wireshark-mcp/bin/wireshark-mcp\" serve"],
+  "argvWindows": ["cmd.exe", "/c", "$HOME/.local/bin/wireshark-mcp.cmd"],
+  "clients": ["omp", "opencode", "pi"]
+}

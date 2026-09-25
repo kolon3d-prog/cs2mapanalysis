@@ -1,0 +1,8 @@
+{
+  "name": "bpftrace",
+  "kind": "stdio",
+  "tier": "core",
+  "description": "трассировка ядра через bpftrace/eBPF: kprobe, uprobe, tracepoint, сисколлы — что процессы делают изнутри системы",
+  "argv": ["bash", "-lc", "command -v bpftrace-mcp-server >/dev/null 2>&1 || { printf 'нет bpftrace-mcp-server: cargo install --locked bpftrace-mcp-server\\n' >&2; exit 1; }; command -v bpftrace >/dev/null 2>&1 || { printf 'нет bpftrace: sudo dnf install bpftrace\\n' >&2; exit 1; }; export BPFTRACE_PASSWD=\"${BPFTRACE_PASSWD-}\"; exec bpftrace-mcp-server | grep --line-buffered '^{'"],
+  "clients": ["omp", "opencode", "pi"]
+}

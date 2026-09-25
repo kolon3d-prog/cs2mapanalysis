@@ -1,0 +1,302 @@
+#!/usr/bin/env python3
+# camoufox_fetch_ext — вторая половина fetch (264 строк, канон FILE-SIZE.md)
+"""Вторая половина fetch: research, export, table_extract — зависит от core."""
+import hashlib
+import json
+import os
+import sqlite3
+import time
+import contextlib
+
+# Базовые утилиты — из core (один источник, включая приватные _CACHE_DB etc.)
+try:
+    import camoufox_research.camoufox_fetch_core as _core
+except ImportError:
+    import camoufox_fetch_core as _core
+globals().update({k: v for k, v in _core.__dict__.items() if not k.startswith('__')})
+
+
+try:
+    from camoufox_research.camoufox_sources import (
+        _batch_texts,
+        _reg_domain,
+        domain_tier,
+        extract_terms,
+        rank_and_select,
+    )
+except ImportError:
+    from camoufox_sources import (
+        _batch_texts,
+        _reg_domain,
+        domain_tier,
+        extract_terms,
+        rank_and_select,
+    )
+try:
+    from camoufox_research.camoufox_academic import paper_rows
+except ImportError:
+    from camoufox_academic import paper_rows
+try:
+    from camoufox_research.camoufox_llm import llm_available, llm_plan_queries
+except ImportError:
+    try:
+        from camoufox_llm import llm_available, llm_plan_queries
+    except ImportError:  # fallback без LLM-модуля (обычно не срабатывает)
+        def llm_available() -> str:  # type: ignore[misc]
+            return ""  # type: ignore[name-defined]
+
+        def llm_plan_queries(queries: list[str], target_domains: int = 20) -> list[str]:  # type: ignore[misc]
+            return []  # type: ignore[name-defined]
+
+def research(queries, max_results_per_query=5, fetch_top=0,
+             article_only=True, max_chars=DEFAULT_CONTENT_CHARS, max_parallel=None,
+             target_domains=0, domains_limit=0, expand=False,
+             fetch_all=False, terms_wave=False, quality_first=False,
+             as_json=False, academic=False, llm_planner=False):
+    """Deep-поиск одним вызовом (паттерны 27.08.2026). Глубокий режим:
+    target_domains — цель по доменам (волны: база → термы → пагинация);
+    domains_limit — макс K на домен; expand — переформулировки;
+    terms_wave — волна из термов первой; quality_first — доки/arXiv
+    первыми; academic — arXiv+S2 канал; fetch_all — тексты всех;
+    as_json — машинный JSON; llm_planner — LLM (DeepSeek/Ollama)
+    генерирует 10 follow-up запросов как в gpt-researcher/STORM (Layer B,
+    опционально, требует DEEPSEEK_API_KEY или OLLAMA_HOST, иначе fallback).
+    По умолчанию всё выключено = старое поведение. Кэш на сутки.
+
+    ХОЧУ ПОЛНОТУ (цель «не хуже tavily/exa», замер 21.09.2026): fetch_top=3
+    (тексты трёх топовых источников сразу, а не только сниппеты),
+    max_chars=12000..20000 (у tavily/exa на дефолте 1-5k симв. на страницу;
+    время фетча от max_chars не зависит — страница читается целиком и
+    кладётся в кэш, режется только ответ), article_only=True (без меню и
+    баннеров), as_json=True (машиночитаемо: sources + texts), max_parallel=4
+    (замер на 8 URL: 37.7с против 85.2с на авто-2 воркерах). fetch_all=True —
+    тексты ВСЕХ источников (дорого: 30 источников × 12k ≈ 90k токенов).
+
+    fetch_top по умолчанию 0 — это дефолт ДВИЖКА: волны кампаний
+    (target_domains, fetch_all=False) читают сотни URL ради адресов, тексты
+    им не нужны и стоят времени; тул-слой MCP ставит fetch_top=3 явно.
+    """
+    if not queries:
+        return "ошибка: пустой список запросов"
+    deep = (target_domains or domains_limit or expand or fetch_all
+            or terms_wave or quality_first or academic or llm_planner)
+    # max_chars ОБЯЗАН быть в ключе кэша (баг найден 21.09.2026 при замере
+    # полноты): без него повторный research(same, max_chars=12000) после
+    # research(same, max_chars=4000) отдавал СУТКИ ровно 4000-ные обрезки из
+    # кэша — «дай больше» не работало, хотя страницы в кэше лежат целиком.
+    cache_key = "r:" + hashlib.sha256(json.dumps(
+        [queries, max_results_per_query, fetch_top, max_chars, article_only,
+         target_domains, domains_limit, expand, fetch_all,
+         terms_wave, quality_first, as_json, academic, llm_planner],
+        ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:16]
+    try:
+        with sqlite3.connect(_CACHE_DB) as con:
+            row = con.execute(
+                "SELECT result, ts FROM searches WHERE q_hash=?",
+                (cache_key,)).fetchone()
+        if row and time.time() - row[1] < _CACHE_TTL:
+            return row[0]
+    except Exception:
+        row = None
+    qs = list(queries)
+    if expand:
+        qs += [q + s for q in queries for s in _EXPAND_SUFFIXES]
+    # raw: list[(tier, title, url, snippet)] — полная добыча без отбора,
+    # качество и лимит домена применяются в конце (rank_and_select).
+    raw, seen_keys, dom_seen, log = [], set(), set(), []
+
+    def _add(title, url, snippet):
+        """True — источник добавлен (счётчики/мета честные), False — дубль/пустой."""
+        if not url:
+            return False
+        # Нормализация URL: один источник с ?utm/ref даёт 2 URL
+        # (проверено GTA 6: rockstargames.com с ?pubDate= дублирует).
+        # Стрипаем параметры отслеживания — дедуп честнее, хвост
+        # (якорь) оставляем как есть.
+        try:
+            from urllib.parse import urlsplit, urlunsplit
+            _sp = urlsplit(url)
+            if _sp.query:
+                # source= — НЕ трекинг, а ИДЕНТИФИКАТОР РСС-ФИДА
+                # (netflix-techblog, WordPress: путь+source = конкретный
+                # канал). Режем ТОЛЬКО чистый трекинг/реф-мусор.
+                keep = [p for p in _sp.query.split("&") if not p.lower().startswith(
+                    ("utm_", "ref=", "pubdate=", "fbclid", "gclid",
+                     "spm=", "mkt_tok="))]
+                url = urlunsplit((_sp.scheme, _sp.netloc, _sp.path,
+                                  "&".join(keep), _sp.fragment))
+        except Exception:
+            pass  # кривой URL — оставляем как есть
+        if not url or url in seen_keys:
+            return False
+        seen_keys.add(url)
+        dom_seen.add(_reg_domain(url))
+        tier, _ = domain_tier(url)
+        raw.append((tier, title, url, snippet))
+        return True
+
+    def _have_goal():
+        return target_domains and len(dom_seen) >= target_domains
+
+    # BUDGET CEILING (28.08, канон mcp-agent strict_budget): жёсткий
+    # лимит ПОИСКОВЫХ вызовов на кампанию (default 40 = ~40 запросов
+    # DDG; индустрия: unbounded = финансовый риск). Достигнут — стоп
+    # с честным логом (не молча), кампания соберёт что есть.
+    max_calls = int(os.environ.get("CAMOUFOX_SEARCH_BUDGET", "40"))
+    calls_made = [0]
+
+    def _wave(query_list, pages):
+        for q in query_list:
+            if _have_goal():
+                return
+            if calls_made[0] >= max_calls:
+                log.append(f"[бюджет: {max_calls} вызовов исчерпан — стоп]")
+                return
+            try:
+                calls_made[0] += 1
+                for url, title, snippet in _search_results(
+                        q, max_results_per_query * pages, pages=pages):
+                    _add(title, url, snippet)
+            except Exception:
+                log.append(f"[пропущен запрос: {q}]")
+
+    _wave(qs, 1)
+    acad = 0
+    if academic and not _have_goal():
+        for q in queries:  # вертикальный канал: первоисточники напрямую
+            if _have_goal():
+                break
+            try:
+                # ГЕЙТ РЕЛЕВАНТНОСТИ (21.09): без него arXiv отдаёт по
+                # неакадемической теме чужие статьи (про детекцию
+                # картинок — по запросу про антидетект-браузеры), и они
+                # же как tier 0 идут ПЕРВЫМИ в цитированном отчёте.
+                for title, url, snippet, _meta in paper_rows(
+                        q, 4, relevant_only=True):
+                    if _add(title, url, snippet):
+                        acad += 1
+            except Exception:
+                log.append(f"[пропущен академический: {q}]")
+    followup = []
+    if terms_wave and target_domains and not _have_goal() and raw:
+        texts = [f"{t} {s}" for _, t, u, s in raw if t or s]
+        followup = extract_terms(texts, queries)
+        if followup:
+            log.append("follow-up из термов: " + " · ".join(followup))
+            _wave(followup, 1)
+    # LLM planner — Layer B (опционально, как в gpt-researcher/STORM)
+    llm_followup = []
+    if llm_planner and target_domains and not _have_goal() and queries:
+        try:
+            avail = llm_available()
+            if avail:
+                llm_followup = llm_plan_queries(queries, target_domains)
+                if llm_followup:
+                    log.append(f"LLM planner ({avail}): " + " · ".join(llm_followup))
+                    _wave(llm_followup, 1)
+            else:
+                log.append("LLM planner: нет ключей (DEEPSEEK_API_KEY/OLLAMA_HOST) — пропуск")
+        except Exception as e:
+            log.append(f"[LLM planner упал: {type(e).__name__}]")
+    if target_domains and not _have_goal():
+        _wave(qs, 2)
+    if not raw:
+        return "ничего не найдено по запросам"
+    # query = общий контекст кампании (все запросы) — релевантность
+    # поверх tier (паттерн re-ranking, arXiv 2602.21456: +16% recall).
+    _q = " ".join(queries).lower()
+    # Ограничение разнообразия соблюдаем ВСЕГДА, когда его просят
+    # (аудит 21.09): раньше отбор шёл мимо rank_and_select при
+    # quality_first=False, и агент получал 10 источников с одного сайта,
+    # хотя сводка печатала «лимит 2 на домен».
+    sel = (rank_and_select(raw, domains_limit, query=_q)
+           if (quality_first or domains_limit) else [(t, u, s) for _, t, u, s in raw])
+    sel_domains = {_reg_domain(u) for _, u, _ in sel}
+    source_rows = []
+    for title, url, snippet in sel:
+        tier, label = domain_tier(url)
+        source_rows.append({"title": title.strip(), "url": url,
+                            "domain": _reg_domain(url), "tier": tier,
+                            "tier_label": label,
+                            "snippet": snippet.strip()[:200] if snippet else ""})
+    batch_text = None
+    if fetch_all or (fetch_top > 0 and not fetch_all):
+        urls = [u for _, u, _ in (sel if fetch_all else sel[:fetch_top])]
+        if urls:
+            batch_text = batch_fetch(urls, max_chars=max_chars,
+                                     article_only=article_only,
+                                     max_parallel=max_parallel)
+    if as_json:
+        texts = _batch_texts(batch_text) if batch_text is not None else []
+        payload = {
+            "meta": {
+                "sources": len(sel), "domains": len(sel_domains),
+                "target_domains": target_domains or None,
+                "queries": queries,
+                "queries_with_expand": len(qs) if expand else len(queries),
+                "initial_sources": len(raw),
+                "top_tier_sources": (sum(1 for tier, *_ in raw if tier == 0)
+                                     if quality_first else None),
+                "followup_queries": followup or None,
+                "academic_sources": (acad if academic else None),
+                "llm_planner": llm_planner,
+                "llm_followup": llm_followup or None,
+                "llm_available": llm_available() if llm_planner else None,
+            },
+            "sources": source_rows, "texts": texts, "notes": log,
+        }
+        result = json.dumps(payload, ensure_ascii=False, indent=1)
+    else:
+        out = [f"источников: {len(sel)}"]
+        if deep:
+            out.append(f"доменов: {len(sel_domains)}"
+                       + (f" (цель {target_domains})" if target_domains else "")
+                       + (f", лимит {domains_limit} на домен"
+                          if domains_limit else ""))
+            if expand:
+                out.append("запросов с расширением: "
+                           f"{len(qs)} вместо {len(queries)}")
+            if quality_first:
+                t0 = sum(1 for tier, *rest in raw if tier == 0)
+                out.append(f"первоисточников: {t0} из {len(raw)}"
+                           " (доки/код/наука первыми)")
+            if academic:
+                out.append(f"академических (arXiv/S2): {acad}")
+            if llm_planner:
+                if llm_available():
+                    out.append(
+                        f"LLM planner ({llm_available() or 'нет ключей'}): "
+                        f"{len(llm_followup)} запросов"
+                    )
+                else:
+                    out.append(
+                        "LLM planner: нет ключей (DEEPSEEK_API_KEY/OLLAMA_HOST)"
+                    )
+        for i, row in enumerate(source_rows, 1):
+            tl = f"; {row['tier_label']}" if row['tier_label'] else ""
+            out.append(f"[{i}] {row['title']}\n    {row['url']}"
+                       f" ({row['domain']}{tl})")
+            if row["snippet"]:
+                out.append(f"    {row['snippet']}")
+        if batch_text is not None:
+            out.append("\n--- ТЕКСТЫ ИСТОЧНИКОВ ---")
+            out.append(batch_text)
+        if log:
+            out.append("\n--- ЗАМЕТКИ ---\n" + "\n".join(log))
+        result = "\n".join(out)
+    try:
+        with sqlite3.connect(_CACHE_DB) as con:
+            con.execute(
+                "INSERT OR REPLACE INTO searches (q_hash, query, result, ts) "
+                "VALUES (?,?,?,?)",
+                (cache_key, "research:" + json.dumps(
+                    queries, ensure_ascii=False)[:200], result, time.time()))
+    except Exception:
+        pass
+    return result
+
+# Экспорт/таблицы — в camoufox_export (резка FILE-SIZE.md, 310→):
+# _write_csv/_write_md/export/table_extract вынесены, реэкспорт для
+# совместимости: fetch-фасад и worker_ext импортируют их отсюда.
+with contextlib.suppress(ImportError):
+    from camoufox_research.camoufox_export import export, table_extract

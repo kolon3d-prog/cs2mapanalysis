@@ -1,0 +1,10 @@
+[Unit]
+Description=command-center: бэкап набора ночью
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+Unit=center-backup.service
+
+[Install]
+WantedBy=timers.target

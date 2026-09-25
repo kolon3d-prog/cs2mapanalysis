@@ -1,0 +1,51 @@
+# Платформенные исключения гейта доков: .sh без соседа .ps1 — только эти пути, и у каждого причина.
+#
+# Формат строки: путь-от-корня-набора|причина. Пусто и # — комментарий.
+# Гейт bin/docs-check.sh (движок bin/docs-check.mjs, на Windows обёртка bin/docs-check.ps1) проверяет
+# обе стороны: .sh без .ps1 и без строки тут — расхождение; строка, у которой файла нет или у которой
+# появился .ps1 — протухшая, и это тоже расхождение. Так список нельзя ни замалчивать, ни забыть.
+#
+# Правило: сюда попадает только системное — то, чего на Windows нет как механизма (systemd, cron,
+# git-хуки, docker-вход) либо станция, которая по своей природе Linux-only. Всё остальное получает
+# .ps1-соседа (обычно тонкую обёртку над общим .mjs-движком), а не строку здесь.
+#
+# ── systemd и cron: на Windows их место — Task Scheduler, где он написан; у центра механизма нет ──
+command-center/contrib/install-units.sh|systemd: юниты центра (сторож набора каждые 15 минут и ночной бэкап). На Windows механизма нет: юнитов и планировщика в наборе не написано — bin/sentinel.ps1 и center backup запускаются руками
+skills-hub/contrib/install-units.sh|systemd: юнит-таймер часовой автопроверки; на Windows её роль держит Task Scheduler (регистрацию делает свой install)
+camoufox-research/scripts/install_timers.sh|systemd: таймеры мониторинга (docs/CROSSPLATFORM.md F4)
+camoufox-research/scripts/sd-run.sh|systemd: запуск под systemd-run — вне Linux такого запуска нет
+camoufox-research/scripts/install_cron.sh|cron: расписание crontab
+camoufox-research/scripts/map_metric_cron.sh|cron: задача crontab
+camoufox-research/scripts/pre-commit_autoupdate.sh|cron: обновление хуков по расписанию
+#
+# ── git-хуки: их ставит git из .git/hooks, на Windows локальных хуков нет (только CI) ─────────────
+camoufox-research/scripts/git-pre-commit.sh|git-hook: локальный pre-commit (docs/CROSSPLATFORM.md F4)
+camoufox-research/scripts/git-pre-push.sh|git-hook: локальный pre-push
+camoufox-research/scripts/gitleaks-precommit.sh|git-hook: локальный gitleaks-хук (на Windows — CI-скан)
+camoufox-research/scripts/guard-all.sh|git-hook: прогон стражей из хуков (guard-all — их общий вход)
+camoufox-research/scripts/guard_selftest.sh|git-hook: самопроверка стражей для хуков
+#
+# ── docker: вход в образ Linux ───────────────────────────────────────────────────────────────────
+camoufox-research/docker/entrypoint.sh|docker: точка входа образа (bash+apt), Windows-контейнеров у проекта нет
+camoufox-research/scripts/run_in_docker.sh|docker: запуск прогона внутри образа
+#
+# ── обвязка POSIX-инструментов: на Windows этот вход держит свой .ps1, а не эти скрипты ───────────
+camoufox-research/scripts/run_bats.sh|bats: вход в наборы bats (POSIX, зовёт scripts/*.sh); на Windows — gates.ps1 со строками [skip]
+skills-hub/markets/skills-sh.sh|bash-adapter: POSIX-адаптер bash-движка хаба; те же вызовы маркета реализованы в skills-manager.ps1
+skills-hub/markets/github.sh|bash-adapter: POSIX-адаптер (gh skill) для bash-движка; в Windows-пути — свой вызов gh в skills-manager.ps1
+skills-hub/markets/clawhub.sh|bash-adapter: POSIX-адаптер (npx skills) для bash-движка; в Windows-пути — свой вызов в skills-manager.ps1
+skills-hub/markets/skillsmp.sh|bash-adapter: POSIX-адаптер (HTTP API) для bash-движка; в Windows-пути — свой вызов в skills-manager.ps1
+#
+# ── станция Linux-only: её и включать на Windows нечего ──────────────────────────────────────────
+fedora-windows-look/install.sh|linux-only: станция переезда Fedora/GNOME (systemctl, gsettings, pactl) — в реестре platforms=["linux"]
+fedora-windows-look/scripts/apply-windows-look.sh|linux-only: тема и панель GNOME
+fedora-windows-look/scripts/apply-zram.sh|linux-only: zram/swap хоста Linux
+fedora-windows-look/scripts/audit.sh|linux-only: аудит железа и служб Linux
+fedora-windows-look/scripts/preflight.sh|linux-only: preflight переезда (Fedora) — первый шаг SKILL.md станции
+mcp-station/bin/lldb-mcp-bridge.sh|linux-only: мост официального LLDB-MCP (Fedora lldb 22.x поднимает TCP-бэкенд); на Windows свой путь — mcp-windbg
+#
+# ── чужой скилл из коллекции: копия upstream, свою копию править нельзя ──────────────────────────
+skills-station/collection/semgrep/scripts/run-scans.sh|чужой скилл: collection/semgrep пришёл из trailofbits/skills — это их скрипт, а не наш
+skills-station/collection/brainstorming/scripts/start-server.sh|чужой скилл: collection/brainstorming пришёл из obra/superpowers — upstream-скрипт visual companion, Windows-порт не поставляется
+skills-station/collection/brainstorming/scripts/stop-server.sh|чужой скилл: collection/brainstorming пришёл из obra/superpowers — upstream-скрипт visual companion, Windows-порт не поставляется
+skills-station/collection/systematic-debugging/find-polluter.sh|чужой скилл: collection/systematic-debugging пришёл из obra/superpowers — upstream-диагностический скрипт, Windows-порт не поставляется

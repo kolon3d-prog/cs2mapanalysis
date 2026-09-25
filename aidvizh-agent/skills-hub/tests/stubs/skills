@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Заглушка npx skills: отдаёт фикстуры и пишет вызванные аргументы в $STUB_LOG.
+set -euo pipefail
+
+printf 'skills %s\n' "$*" >>"${STUB_LOG:?STUB_LOG не задан}"
+[[ -n "${STUB_SLEEP:-}" ]] && sleep "$STUB_SLEEP"
+
+case "${1:-}" in
+  use)
+    cat "${FIXTURES:?FIXTURES не задан}/skills-use-output.md"
+    ;;
+  list)
+    printf 'Global Skills\n\nfixture-skill   ~/.agents/skills/fixture-skill\n'
+    ;;
+  add)
+    shift
+    pkg=""
+    global=0
+    for arg in "$@"; do
+      case "$arg" in
+        -g) global=1 ;;
+        --project) global=0 ;;
+        -*) ;;
+        *) [[ -z "$pkg" ]] && pkg="$arg" ;;
+      esac
+    done
+    name="${pkg##*@}"
+    [[ "$name" == "$pkg" ]] && name="${pkg##*/}"
+    if (( global )); then
+      lock="$HOME/.agents/.skill-lock.json"
+      dir="$HOME/.agents/skills"
+    else
+      lock="$(pwd)/skills-lock.json"
+      dir="$(pwd)/.agents/skills"
+    fi
+    mkdir -p "$dir/$name"
+    cp "${FIXTURES}/skill-plain.md" "$dir/$name/SKILL.md"
+    mkdir -p "$(dirname "$lock")"
+    printf '{"skills":{"%s":{}}}\n' "$name" >"$lock"
+    printf 'installed %s\n' "$name"
+    ;;
+  *)
+    exit 0
+    ;;
+esac

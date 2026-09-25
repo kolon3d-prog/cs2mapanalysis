@@ -1,0 +1,9 @@
+{
+  "name": "exa",
+  "kind": "http",
+  "tier": "keyed",
+  "description": "веб-поиск и чтение страниц через Exa (MCP по HTTP)",
+  "url": "https://mcp.exa.ai/mcp?tools=web_search_exa,web_fetch_exa,web_search_advanced_exa,agent_run",
+  "headers": { "x-api-key": { "env": "EXA_API_KEY" } },
+  "clients": ["omp", "opencode", "pi"]
+}

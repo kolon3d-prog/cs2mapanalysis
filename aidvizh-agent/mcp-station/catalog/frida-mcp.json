@@ -1,0 +1,9 @@
+{
+  "name": "frida-mcp",
+  "kind": "stdio",
+  "tier": "core",
+  "description": "динамическая инструментация Frida: attach/spawn, инъекция JS, хуки, чтение и дамп памяти процесса",
+  "argv": ["bash", "-lc", "test -x \"$HOME/.venvs/frida-mcp/bin/frida-mcp\" || { printf 'frida-mcp не собран: запусти mcp-station/bin/debug-setup.sh\\n' >&2; exit 1; }; exec \"$HOME/.venvs/frida-mcp/bin/frida-mcp\""],
+  "argvWindows": ["$HOME/.venvs/frida-mcp/Scripts/frida-mcp.exe"],
+  "clients": ["omp", "opencode", "pi"]
+}

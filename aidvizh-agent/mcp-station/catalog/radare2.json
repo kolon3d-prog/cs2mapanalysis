@@ -1,0 +1,8 @@
+{
+  "name": "radare2",
+  "kind": "stdio",
+  "tier": "core",
+  "description": "статический реверс бинарей через radare2 (r2mcp): функции, импорты, строки, декомпиляция, diff, 32 инструмента",
+  "argv": ["bash", "-lc", "command -v r2pm >/dev/null 2>&1 || { printf 'нет radare2: собери upstream (git clone https://github.com/radareorg/radare2 && sys/install.sh)\\n' >&2; exit 1; }; r2pm -l 2>/dev/null | grep -q '^r2mcp$' || { printf 'нет r2mcp: r2pm -Uci r2mcp\\n' >&2; exit 1; }; exec r2pm -r r2mcp"],
+  "clients": ["omp", "opencode", "pi"]
+}

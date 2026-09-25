@@ -1,0 +1,5 @@
+# Скрипты хаба — bash (не sh): массивы, [[ ]], local, process substitution.
+shell=bash
+
+# Адаптеры самостоятельные и ничего не подключают через source — проверять внешние файлы нечего.
+external-sources=false

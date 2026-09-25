@@ -1,0 +1,24 @@
+{
+  "name": "omp",
+  "description": "oh-my-pi — форк pi с батарейками, команда omp",
+  "home": "https://omp.sh",
+  "verify": { "command": "omp", "args": ["--version"] },
+  "methods": {
+    "linux": [
+      { "id": "npm", "requires": ["npm"], "argv": ["npm", "install", "-g", "@oh-my-pi/pi-coding-agent@18.3.0"] },
+      { "id": "bun", "requires": ["bun"], "argv": ["bun", "install", "-g", "@oh-my-pi/pi-coding-agent@18.3.0"] }
+    ],
+    "darwin": [
+      { "id": "npm", "requires": ["npm"], "argv": ["npm", "install", "-g", "@oh-my-pi/pi-coding-agent@18.3.0"] },
+      { "id": "bun", "requires": ["bun"], "argv": ["bun", "install", "-g", "@oh-my-pi/pi-coding-agent@18.3.0"] }
+    ],
+    "win32": [
+      { "id": "npm", "requires": ["npm"], "argv": ["npm", "install", "-g", "@oh-my-pi/pi-coding-agent@18.3.0"] },
+      { "id": "bun", "requires": ["bun"], "argv": ["bun", "install", "-g", "@oh-my-pi/pi-coding-agent@18.3.0"] }
+    ]
+  },
+  "notes": [
+    "Версия npm-пакета зафиксирована в каталоге; обновление — отдельное изменение этого файла с review.",
+    "После установки проверь бинарь и PATH: opencode/pi-подобные установщики могут класть его в пользовательский prefix."
+  ]
+}

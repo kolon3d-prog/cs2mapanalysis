@@ -1,0 +1,25 @@
+# Исключения строгого режима: .sh без `set` с -u и pipefail в первых 25 строках — только эти пути,
+# и у каждого причина.
+#
+# Формат строки: путь-от-корня-набора|причина. Пусто и # — комментарий.
+# Гейт bin/docs-check.sh (движок bin/docs-check.mjs, на Windows обёртка bin/docs-check.ps1) проверяет
+# обе стороны: .sh без строгого режима и без строки тут — расхождение; строка, у которой файла нет
+# или у которой строгий режим уже стоит — протухшая, и это тоже расхождение.
+#
+# Правило: строгий режим (`set -euo pipefail`, а где -e мешает — `set -uo pipefail`) стоит в шапке
+# скрипта, до первой команды: падать скрипт должен на своей ошибке, а не на пустой переменной.
+# Строка здесь — видимое решение, а не забытая шапка.
+#
+# ── POSIX sh: pipefail там нет как механизма ─────────────────────────────────────────────────────
+sysprompt/install.sh|#!/bin/sh: pipefail не POSIX (на dash роняет скрипт), конвейеров в файле нет
+fedora-windows-look/install.sh|#!/usr/bin/env sh: pipefail не POSIX (на dash роняет скрипт), конвейеров в файле нет
+#
+# ── bash, но pipefail перевернул бы проверки: они полагаются на код последнего в конвейере ───────
+fedora-windows-look/scripts/apply-windows-look.sh|bash, set -u: условие `sudo dnf install … | grep -qiE …` читает код grep, с pipefail оно ломается; станция Linux-only, проверку переписывает сама станция
+fedora-windows-look/scripts/apply-zram.sh|bash, set -u: условие `systemctl list-unit-files | grep -q …` читает код grep, с pipefail проверка перевернётся; правит сама станция
+#
+# ── docker: точка входа образа ───────────────────────────────────────────────────────────────────
+camoufox-research/docker/entrypoint.sh|docker: точка входа образа на #!/bin/sh (в образе dash) — pipefail не POSIX, пайплайнов в скрипте нет, set -eu стоит
+skills-station/collection/brainstorming/scripts/start-server.sh|чужой скилл: upstream-скриптobra/superpowers без строгого режима; не редактируем копию коллекции
+skills-station/collection/brainstorming/scripts/stop-server.sh|чужой скилл: upstream-скрипт obra/superpowers без строгого режима; не редактируем копию коллекции
+skills-station/collection/systematic-debugging/find-polluter.sh|чужой скилл: upstream-скрипт obra/superpowers с ослабленной проверкой; не редактируем копию коллекции

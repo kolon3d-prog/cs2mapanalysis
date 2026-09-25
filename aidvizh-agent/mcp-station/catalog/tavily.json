@@ -1,0 +1,10 @@
+{
+  "name": "tavily",
+  "kind": "stdio",
+  "tier": "keyed",
+  "description": "веб-поиск и выкачка через Tavily",
+  "argv": ["bash", "-lc", "set -a; . \"$MCP_SECRETS\"; set +a; exec npx -y tavily-mcp@0.2.22"],
+  "argvWindows": ["node", "$STATION/bin/entryenv.mjs", "--", "npx", "-y", "tavily-mcp@0.2.22"],
+  "requiresEnv": ["TAVILY_API_KEY"],
+  "clients": ["omp", "opencode", "pi"]
+}

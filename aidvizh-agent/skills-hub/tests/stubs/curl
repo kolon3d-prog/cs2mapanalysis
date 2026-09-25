@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Заглушка curl: отвечает фикстурами на URL адаптеров, чтобы тесты не ходили в сеть.
+set -euo pipefail
+
+printf 'curl %s\n' "$*" >>"${STUB_LOG:?STUB_LOG не задан}"
+
+url=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --connect-timeout | --max-time | --data-urlencode)
+      shift
+      ;;
+    -*)
+      ;;
+    *)
+      url="$1"
+      ;;
+  esac
+  shift
+done
+
+case "$url" in
+  */api/search) cat "${FIXTURES:?FIXTURES не задан}/${FIXTURE_SEARCH:-skills-sh-search.json}" ;;
+  */api/skills) cat "${FIXTURES:?FIXTURES не задан}/${FIXTURE_SKILLSMP:-skillsmp-skills.json}" ;;
+  *)
+    echo "curl-заглушка: неизвестный URL $url" >&2
+    exit 1
+    ;;
+esac

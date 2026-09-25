@@ -1,0 +1,30 @@
+{
+  "filters": { "search": "pdf", "sortBy": "stars" },
+  "pagination": { "page": 1, "limit": 30, "total": 4 },
+  "skills": [
+    {
+      "name": "dupe",
+      "stars": 999999,
+      "githubUrl": "https://github.com/acme/tools/tree/main/a",
+      "route": { "ownerSlug": "acme", "repoSlug": "tools" }
+    },
+    {
+      "name": "dupe",
+      "stars": 999999,
+      "githubUrl": "https://github.com/acme/tools/tree/main/b",
+      "route": { "ownerSlug": "acme", "repoSlug": "tools" }
+    },
+    {
+      "name": "dupe",
+      "stars": 999999,
+      "githubUrl": "https://github.com/acme/tools/tree/main/c",
+      "route": { "ownerSlug": "acme", "repoSlug": "tools" }
+    },
+    {
+      "name": "scraper",
+      "stars": 5,
+      "githubUrl": "https://github.com/acme/tools/tree/main/scraper",
+      "route": { "ownerSlug": "acme", "repoSlug": "tools" }
+    }
+  ]
+}
